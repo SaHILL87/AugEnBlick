@@ -1,14 +1,21 @@
-import mongoose from "mongoose";
+import mongoose, {Document,Schema} from "mongoose";
 
-
-export interface IUser {
-    username: string;
+export interface IUser extends Document {
     name: string;
     email: string;
-    password: string;
+    password?: string;
+    googleId?: string;
+    docs: Array<Schema.Types.ObjectId>;
     isVerified: boolean;
-    phone: string;
-    avatar: string;
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface IDocs extends Document {
+    documentName: string;
+    data: object;
+    drawings: any;
+    createdAt: Date;
+    updatedAt: Date;
+    createdBy: Schema.Types.ObjectId;
 }

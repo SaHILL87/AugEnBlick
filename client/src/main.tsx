@@ -8,14 +8,14 @@ import ScreenshotPreventionWrapper from "./utils/PreventScreenshot.tsx";
 import { ThemeProvider } from "./components/theme-provider.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  // <StrictMode>
     <BrowserRouter>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <ScreenshotPreventionWrapper>
+      {/* <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <ScreenshotPreventionWrapper> */}
           <Toaster />
           <App />
-        </ScreenshotPreventionWrapper>
-      </ThemeProvider>
+        {/* </ScreenshotPreventionWrapper>
+      </ThemeProvider> */}
     </BrowserRouter>
-  </StrictMode>
+  // </StrictMode>
 );

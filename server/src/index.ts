@@ -14,6 +14,10 @@ import {
   findOrCreateDocument,
   updateDocument,
 } from "./controllers/document.controller";
+import { userRoutes } from "./routes/user.routes";
+import { errorMiddleware } from "./lib/ErrorHandler";
+import { User } from "./models/user.models";
+import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 
 const app = express();
 
@@ -29,6 +33,10 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 
 const server = http.createServer(app);
+
+app.use("/api/user",userRoutes);
+
+app.use(errorMiddleware)
 
 const PORT = Number(process.env.PORT || 3000);
 
@@ -62,7 +70,7 @@ io.on("connection", (socket) => {
     socket.emit("all-documents", allDocuments);
   });
 
-  socket.on("get-document", async ({ documentId, documentName, userName }) => {
+  socket.on("get-document", async ({ documentId, documentName, token }) => {
     socket.join(documentId);
 
     // Initialize users list for this document if it doesn't exist
@@ -74,6 +82,13 @@ io.on("connection", (socket) => {
     if (!documentDrawings[documentId]) {
       documentDrawings[documentId] = [];
     }
+
+    console.log(token, process.env.JWT_SECRET);
+    const {id:userId} = jsonwebtoken.verify(token, process.env.JWT_SECRET || "") as JwtPayload;
+    
+    const user = await User.findById(userId);
+
+    console.log(user);
 
     // Add user to document with a unique cursor color
     const colors = [
@@ -91,7 +106,7 @@ io.on("connection", (socket) => {
 
     // Add this user to the document's user list
     documentUsers[documentId][socket.id] = {
-      userName: userName || "Anonymous",
+      _id:  user?.name,
       color: colors[colorIndex],
       cursorPosition: { index: 0, length: 0 },
     };

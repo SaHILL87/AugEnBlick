@@ -14,36 +14,17 @@ import { uploadOnCloudinary } from "../lib/cloudinary";
 
 export const registerUser = TryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { name, email, password, role, phone } = req.body;
+    const { name, email, password } = req.body;
 
     let user = await User.findOne({ email });
     if (user) return next(new ErrorHandler(400, "User already exists"));
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (!req.file) {
-      return next(new ErrorHandler(400, "No file uploaded"));
-    }
-
-    // Check file size (limit: 2MB)
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-    if (req.file.size > MAX_FILE_SIZE) {
-      return next(new ErrorHandler(400, "File size exceeds 2MB"));
-    }
-
-    const avatarLocalPath = req.file.path;
-
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-
-    if (!avatar) return next(new ErrorHandler(500, "Failed to upload avatar"));
-
     user = await User.create({
       name,
       email,
-      avatar: avatar.secure_url,
       password: hashedPassword,
-      role,
-      phone: formatPhoneNumber(phone),
     });
 
     const verificationCode = generateVerificationToken();
@@ -55,17 +36,6 @@ export const registerUser = TryCatch(
     });
 
     await sendVerification(email, verificationCode);
-    // const responseWS = await fetch("http://127.0.0.1:5000/send-message", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({
-    //     phone: phone,
-    //     message: `Your verification code is: ${verificationCode}`,
-    //   }),
-    // });
-
-    // const result = await responseWS.json();
-    // console.log("Result:", result);
 
     return res.status(201).json({
       success: true,
@@ -90,6 +60,12 @@ export const loginUser = TryCatch(
     if (!user.isVerified) {
       const verificationCode = generateVerificationToken();
 
+      const existingVerification = await Verification.findOne({ user: user._id });
+
+      if (existingVerification) {
+        await existingVerification.deleteOne({ user: user._id });
+      }
+
       await Verification.create({
         user: user._id,
         code: verificationCode,
@@ -106,7 +82,7 @@ export const loginUser = TryCatch(
       });
     }
 
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    const isPasswordMatch = await bcrypt.compare(password, user.password!);
 
     if (!isPasswordMatch) {
       return next(new ErrorHandler(400, "Invalid credentials"));
@@ -146,6 +122,8 @@ export const verifyUser = TryCatch(
     if (!userVerificationCode) {
       return next(new ErrorHandler(400, "Verification code expired"));
     }
+
+    console.log(userVerificationCode.code, verificationCode);
 
     if (Number(userVerificationCode.code) !== Number(verificationCode)) {
       return next(new ErrorHandler(400, "Invalid verification code"));

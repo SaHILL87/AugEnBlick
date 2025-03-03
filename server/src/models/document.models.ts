@@ -1,7 +1,8 @@
 // models/document.model.js
 import mongoose from "mongoose";
+import { IDocs } from "../schemas";
 
-const DocumentSchema = new mongoose.Schema({
+const DocumentSchema = new mongoose.Schema<IDocs>({
   _id: String,
   documentName: {
     type: String,
@@ -11,7 +12,15 @@ const DocumentSchema = new mongoose.Schema({
   drawings: {
     type: Array,
     default: [],
-  }
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 }, {
   timestamps: true,
 });
@@ -27,6 +36,6 @@ DocumentSchema.set('toJSON', {
   }
 });
 
-const Document = mongoose.model("Document", DocumentSchema);
+const Document = mongoose.model<IDocs>("Document", DocumentSchema);
 
 export default Document;
