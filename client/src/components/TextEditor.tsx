@@ -87,10 +87,9 @@ export const TextEditor = () => {
   // Keep track of whether an external update is in progress
   const isExternalUpdateRef = useRef<boolean>(false);
 
-    const isProcessingUpdateRef = useRef<boolean>(false);
-    const pendingUpdatesRef = useRef<ExcalidrawElement[][]>([]);
-    const updateSourceRef = useRef<'server' | 'local' | null>(null);
-
+  const isProcessingUpdateRef = useRef<boolean>(false);
+  const pendingUpdatesRef = useRef<ExcalidrawElement[][]>([]);
+  const updateSourceRef = useRef<"server" | "local" | null>(null);
 
   // Update the ref whenever elements change
   useEffect(() => {
@@ -331,11 +330,10 @@ export const TextEditor = () => {
     };
   }, [socket, quill, cursors]);
 
-
   // Handle Excalidraw drawing events
   useEffect(() => {
     if (!socket) return;
-  
+
     // Safely apply updates without triggering loops
     const safelyApplyUpdate = (elements: ExcalidrawElement[]) => {
       // If we're already processing an update, queue this one
@@ -343,34 +341,34 @@ export const TextEditor = () => {
         pendingUpdatesRef.current.push(elements);
         return;
       }
-  
+
       isProcessingUpdateRef.current = true;
-      updateSourceRef.current = 'server';
-  
+      updateSourceRef.current = "server";
+
       // Update the ref immediately
       latestElementsRef.current = elements;
-  
+
       // Direct API update if ref is available
       if (excalidrawRef.current) {
         try {
           excalidrawRef.current.updateScene({
             elements: elements,
-            appState
+            appState,
           });
         } catch (err) {
           console.error("Error directly updating Excalidraw:", err);
         }
       }
-  
+
       // Schedule state update outside current execution context
       Promise.resolve().then(() => {
         setExcalidrawElements(elements);
-        
+
         // Process any pending updates after a short delay
         setTimeout(() => {
           isProcessingUpdateRef.current = false;
           updateSourceRef.current = null;
-          
+
           if (pendingUpdatesRef.current.length > 0) {
             const nextUpdate = pendingUpdatesRef.current.shift();
             if (nextUpdate) {
@@ -380,45 +378,46 @@ export const TextEditor = () => {
         }, 50);
       });
     };
-  
+
     // Load drawings handler
     const handleLoadDrawings = (drawings: ExcalidrawElement[]) => {
       if (!Array.isArray(drawings)) return;
       safelyApplyUpdate(drawings);
     };
-  
+
     // Receive updated drawings handler
     const handleDrawingsUpdated = (drawings: ExcalidrawElement[]) => {
       if (!Array.isArray(drawings)) return;
       safelyApplyUpdate(drawings);
     };
-  
+
     // Single element update handler
     const handleElementUpdated = (element: ExcalidrawElement) => {
       // Skip if we're currently processing a server update
-      if (updateSourceRef.current === 'server') return;
-      
+      if (updateSourceRef.current === "server") return;
+
       const currentElements = [...latestElementsRef.current];
-      const index = currentElements.findIndex(el => el.id === element.id);
-      
-      const newElements = index >= 0
-        ? currentElements.map(el => el.id === element.id ? element : el)
-        : [...currentElements, element];
-      
+      const index = currentElements.findIndex((el) => el.id === element.id);
+
+      const newElements =
+        index >= 0
+          ? currentElements.map((el) => (el.id === element.id ? element : el))
+          : [...currentElements, element];
+
       safelyApplyUpdate(newElements);
     };
-  
+
     // Clear drawings handler
     const handleDrawingsCleared = () => {
       safelyApplyUpdate([]);
     };
-  
+
     // Register all socket event handlers
     socket.on("load-drawings", handleLoadDrawings);
     socket.on("drawings-updated", handleDrawingsUpdated);
     socket.on("drawing-element-updated", handleElementUpdated);
     socket.on("drawings-cleared", handleDrawingsCleared);
-  
+
     // Clean up all socket listeners on unmount
     return () => {
       socket.off("load-drawings", handleLoadDrawings);
@@ -427,39 +426,42 @@ export const TextEditor = () => {
       socket.off("drawings-cleared", handleDrawingsCleared);
     };
   }, [socket, appState]);
-  
+
   // Completely separate the handling of Excalidraw changes
   const handleExcalidrawChange = useCallback(
     (elements: readonly ExcalidrawElement[], state: AppState) => {
       // Skip if this update originated from a server event
-      if (updateSourceRef.current === 'server') return;
-      
+      if (updateSourceRef.current === "server") return;
+
       // Mark this as a local update
-      updateSourceRef.current = 'local';
-      
+      updateSourceRef.current = "local";
+
       // Convert to regular array
       const elementsArray = Array.from(elements) as ExcalidrawElement[];
-      
+
       // Only update if there's an actual change
-      if (JSON.stringify(latestElementsRef.current) !== JSON.stringify(elementsArray)) {
+      if (
+        JSON.stringify(latestElementsRef.current) !==
+        JSON.stringify(elementsArray)
+      ) {
         // Update local refs and state
         latestElementsRef.current = elementsArray;
-        
+
         // Use Promise to schedule state updates outside current execution context
         Promise.resolve().then(() => {
           setExcalidrawElements(elementsArray);
           setAppState(state);
         });
-        
+
         // Debounce sending updates to the server
         if (socket) {
           if (drawingUpdateTimer.current) {
             clearTimeout(drawingUpdateTimer.current);
           }
-          
+
           drawingUpdateTimer.current = setTimeout(() => {
             socket.emit("update-drawings-batch", elementsArray);
-            
+
             // Reset update source after sending
             updateSourceRef.current = null;
           }, 300);
@@ -472,21 +474,24 @@ export const TextEditor = () => {
     [socket]
   );
 
-  const onExcalidrawAPIMount = useCallback((api: any) => {
-    excalidrawRef.current = api;
-    
-    // Initial scene setup if we have elements
-    if (latestElementsRef.current.length > 0) {
-      try {
-        api.updateScene({
-          elements: latestElementsRef.current,
-          appState
-        });
-      } catch (err) {
-        console.error("Error setting initial Excalidraw scene:", err);
+  const onExcalidrawAPIMount = useCallback(
+    (api: any) => {
+      excalidrawRef.current = api;
+
+      // Initial scene setup if we have elements
+      if (latestElementsRef.current.length > 0) {
+        try {
+          api.updateScene({
+            elements: latestElementsRef.current,
+            appState,
+          });
+        } catch (err) {
+          console.error("Error setting initial Excalidraw scene:", err);
+        }
       }
-    }
-  }, [appState]);
+    },
+    [appState]
+  );
 
   // Load document content
   useEffect(() => {
@@ -544,7 +549,6 @@ export const TextEditor = () => {
       setIsSaving(false);
     }, 1000);
   }, [socket, quill, documentId, documentTitle]);
-
 
   // Toggle between editor and drawing mode
   const toggleDrawingMode = useCallback(() => {
@@ -606,33 +610,33 @@ export const TextEditor = () => {
 
   const clearDrawings = useCallback(() => {
     // Mark as local update to prevent loops
-    updateSourceRef.current = 'local';
-    
+    updateSourceRef.current = "local";
+
     // Update refs
     latestElementsRef.current = [];
-    
+
     // Direct API update
     if (excalidrawRef.current) {
       try {
         excalidrawRef.current.updateScene({
           elements: [],
-          appState
+          appState,
         });
       } catch (err) {
         console.error("Error clearing drawings:", err);
       }
     }
-    
+
     // Schedule state update
     Promise.resolve().then(() => {
       setExcalidrawElements([]);
     });
-    
+
     // Notify server
     if (socket) {
       socket.emit("clear-drawings");
     }
-    
+
     // Reset update source after a short delay
     setTimeout(() => {
       updateSourceRef.current = null;
@@ -782,3 +786,5 @@ export const TextEditor = () => {
     </div>
   );
 };
+
+export default TextEditor;
