@@ -35,13 +35,10 @@ import { api } from "@/lib/api";
 
 type Step = "auth" | "phone" | "profile" | "success";
 interface FormData {
-  name: string;
+  name : string;
   email: string;
   password: string;
-  avatar: File | null;
-  phone: string;
   otp: string;
-  username: string;
 }
 
 export function SignUpForm() {
@@ -51,10 +48,7 @@ export function SignUpForm() {
     name: "",
     email: "",
     password: "",
-    avatar: null,
-    phone: "",
     otp: "",
-    username: "",
   });
   const [otpTimer, setOtpTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
@@ -71,8 +65,6 @@ export function SignUpForm() {
       setStep("phone");
       startOtpTimer();
     } else if (step === "phone") {
-      setStep("profile");
-    } else if (step === "profile") {
       setStep("success");
     }
 
@@ -87,11 +79,6 @@ export function SignUpForm() {
     formData1.append("name", formData.name);
     formData1.append("email", formData.email);
     formData1.append("password", formData.password);
-    formData1.append("phone", formData.phone);
-
-    if (formData.avatar && formData.avatar instanceof File) {
-      formData1.append("avatar", formData.avatar);
-    }
 
     try {
       const res = await api.post("/api/user/sign-up", formData1);
@@ -167,43 +154,8 @@ export function SignUpForm() {
   //     }
   //  };
 
-  const handleUsername = async () => {
-    setLoading(true);
-
-    try {
-      const res = await api.post("/api/user/username", {
-        username: formData.username,
-      });
-
-      if (res.data.success) {
-        toast.success(res.data.message);
-        setStep("success");
-      }
-    } catch (error) {
-      toast.error("An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const renderAuthStep = () => (
     <CardContent className="space-y-4">
-      <div>
-        <FileUpload
-          fieldChange={(files) => {
-            if (files.length > 0) {
-              setFormData((prev) => ({
-                ...prev,
-                avatar: files[0],
-              }));
-            }
-          }}
-          mediaUrl=""
-          placeholder="Upload your profile picture"
-          acceptedTypes="image/*"
-          containerClassName="h-24 w-24 mx-auto"
-        />
-      </div>
 
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
@@ -230,22 +182,6 @@ export function SignUpForm() {
             value={formData.email}
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
-            }
-            className="pl-10"
-          />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number</Label>
-        <div className="relative">
-          <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="phone"
-            type="tel"
-            placeholder="Enter your phone number"
-            value={formData.phone}
-            onChange={(e) =>
-              setFormData({ ...formData, phone: e.target.value })
             }
             className="pl-10"
           />
@@ -283,7 +219,6 @@ export function SignUpForm() {
         disabled={
           !validateEmail(formData.email) ||
           !validatePassword(formData.password) ||
-          !validatePhone(formData.phone) ||
           loading
         }
         onClick={handleRegister}
@@ -384,40 +319,6 @@ export function SignUpForm() {
     </CardContent>
   );
 
-  const renderProfileStep = () => (
-    <CardContent className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="username">Username</Label>
-        <div className="relative">
-          <AtSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="username"
-            type="text"
-            placeholder="Choose a username"
-            value={formData.username}
-            onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
-            }
-            className="pl-10"
-          />
-        </div>
-      </div>
-
-      <Button
-        type="submit"
-        disabled={!formData.username || loading}
-        className="w-full"
-        onClick={handleUsername}
-      >
-        {loading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          "Doneeee"
-        )}
-      </Button>
-    </CardContent>
-  );
-
   const renderSuccessStep = () => (
     <CardContent className="space-y-4 text-center">
       <Confetti />
@@ -460,7 +361,6 @@ export function SignUpForm() {
         <form onSubmit={handleSubmit}>
           {step === "auth" && renderAuthStep()}
           {step === "phone" && renderPhoneStep()}
-          {step === "profile" && renderProfileStep()}
           {step === "success" && renderSuccessStep()}
         </form>
       </Card>

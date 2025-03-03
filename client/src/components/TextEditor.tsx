@@ -9,6 +9,7 @@ import { AppState } from '@excalidraw/excalidraw/types/types';
 
 // Import custom font styles
 import 'quill/dist/quill.snow.css';
+import { getCookie } from '@/lib/utils';
 
 // Add QuillCursors interface
 interface QuillCursors {
@@ -355,7 +356,7 @@ export const TextEditor = () => {
         socket.emit("get-document", { 
             documentId, 
             documentName, 
-            userName 
+            token: getCookie('token')! 
         });
 
     }, [socket, quill, documentId, userName]);
@@ -444,7 +445,7 @@ export const TextEditor = () => {
                             appState: appState
                         }}
                         onChange={handleExcalidrawChange}
-                        
+                        // excalidrawAPI={(api)=> api.updateScene({ elements: excalidrawElements })}
                     />
                 </div>
             ) : (

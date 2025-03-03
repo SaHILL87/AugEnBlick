@@ -2,7 +2,6 @@ import { api } from "@/lib/api";
 import { Check, Loader2, Lock, Mail } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
-import Confetti from "react-confetti";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -76,16 +75,18 @@ export function LoginForm() {
       });
 
       if (res.data.success) {
+        console.log("sucess");
         toast.success(res.data.message);
         setUser(res.data.user);
 
-        if (res.data.user.isVerified) {
+        if (res.data.user && res.data.user.isVerified) {
           navigate("/dashboard");
         } else {
           setStep("phone");
         }
       }
     } catch (error) {
+      console.log(error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -119,7 +120,7 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      const res = await api.post("/api/auth/verify", {
+      const res = await api.post("/api/user/verify", {
         email: formData.email,
         verificationCode: formData.otp,
       });
@@ -283,7 +284,6 @@ export function LoginForm() {
 
   const renderSuccessStep = () => (
     <CardContent className="space-y-4 text-center">
-      <Confetti />
       <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
         <Check className="w-8 h-8 text-green-600" />
       </div>
@@ -295,7 +295,7 @@ export function LoginForm() {
       </p>
       <Button
         onClick={() => {
-          navigate("/friends");
+          navigate("/home");
         }}
         className="w-full"
       >

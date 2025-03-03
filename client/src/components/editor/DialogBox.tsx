@@ -14,51 +14,51 @@ import { useNavigate } from "react-router-dom"
 import { v4 as uuidV4 } from "uuid"
 import { useState } from "react"
 
-
 export function Dialogbox() {
-  const navigate = useNavigate() ;
-  const [docName, setDocName] = useState<string>("") ;
-    const createDoc = (docId: string) => {
-      navigate(`/documents/${docId}`) ;
-    }
-    const handleSubmit = () => {
-      const id = uuidV4() ;
-      localStorage.setItem(`document-name-for-${id}`, docName) ;      
-      createDoc(id) ;
-    }
+  const navigate = useNavigate();
+  const [docName, setDocName] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const createDoc = (docId: string) => {
+    navigate(`/documents/${docId}`);
+  }
+
+  const handleSubmit = () => {
+    const id = uuidV4();
+    localStorage.setItem(`document-name-for-${id}`, docName);
+    createDoc(id);
+    setOpen(false);
+  }
+
   return (
-    <div className="border p-2 bg-white border-gray-300 h-[200px] w-[160px] rounded-md hover:border-blue-600">
-        <Dialog>
-        <DialogTrigger asChild>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Create a new document</DialogTitle>
-            <DialogDescription>
-              Enter a name for your document. Click create when you're done.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                defaultValue="Pedro Duarte"
-                className="col-span-3"
-                value={docName}
-                onChange={(e) => { setDocName(e.target.value); }}
-              />
-            </div>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Create a new document</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Create a new document</DialogTitle>
+          <DialogDescription>
+            Enter a name for your document. Click create when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Name
+            </Label>
+            <Input
+              id="name"
+              value={docName}
+              onChange={(e) => setDocName(e.target.value)}
+              className="col-span-3"
+            />
           </div>
-          <DialogFooter>
-            <Button style={{"backgroundColor": "rgb(10, 110, 209)"}} type="submit" onClick={handleSubmit}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleSubmit}>Create</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
-
-
