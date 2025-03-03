@@ -1,7 +1,127 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Chonburi&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Pacifico&family=Indie+Flower&family=Sacramento&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Default system fonts */
+.ql-font-arial {
+  font-family: Arial, sans-serif;
+}
+
+.ql-font-times-new-roman {
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.ql-font-courier-new {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.ql-font-georgia {
+  font-family: Georgia, serif;
+}
+
+.ql-font-trebuchet-ms {
+  font-family: 'Trebuchet MS', sans-serif;
+}
+
+.ql-font-verdana {
+  font-family: Verdana, Geneva, sans-serif;
+}
+
+/* Modern web fonts */
+.ql-font-roboto {
+  font-family: 'Roboto', sans-serif;
+}
+
+.ql-font-open-sans {
+  font-family: 'Open Sans', sans-serif;
+}
+
+/* Cursive/handwriting fonts */
+.ql-font-dancing-script {
+  font-family: 'Dancing Script', cursive;
+}
+
+.ql-font-pacifico {
+  font-family: 'Pacifico', cursive;
+}
+
+.ql-font-indie-flower {
+  font-family: 'Indie Flower', cursive;
+}
+
+.ql-font-sacramento {
+  font-family: 'Sacramento', cursive;
+}
+
+/* Custom editor styles */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toolbar-extension {
+  display: flex;
+  padding: 8px;
+  background-color: #f3f3f3;
+  border-bottom: 1px solid #ccc;
+}
+
+.toggle-drawing-btn, .clear-drawings-btn {
+  padding: 8px 16px;
+  margin-right: 10px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.toggle-drawing-btn:hover, .clear-drawings-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.toggle-drawing-btn.active {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+  color: #1890ff;
+}
+
+.drawing-container {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.text-editor-container {
+  flex: 1;
+}
+
+/* Adjust Quill toolbar for better visibility of font options */
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="dancing-script"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="dancing-script"]::before {
+  font-family: 'Dancing Script', cursive;
+  content: "Dancing Script";
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="pacifico"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="pacifico"]::before {
+  font-family: 'Pacifico', cursive;
+  content: "Pacifico";
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="indie-flower"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="indie-flower"]::before {
+  font-family: 'Indie Flower', cursive;
+  content: "Indie Flower";
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="sacramento"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="sacramento"]::before {
+  font-family: 'Sacramento', cursive;
+  content: "Sacramento";
+}
 
 
 @layer base {
@@ -100,4 +220,214 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.5);
+}
+
+.editorContainer {
+  background-color: #F3F3F3;
+}
+
+
+.editorContainer .ql-editor {
+  /* A4 size */
+  width: 21cm;
+  min-height: 29.7cm;
+  padding: 1in;
+  margin: 1rem;
+  box-shadow: 0 0 5px 0 rgba(0,0,0,.5);
+  background-color: white;
+  border-radius: 5px;
+}
+
+
+.editorContainer .ql-container.ql-snow {
+  border:none;
+  display: flex;
+  justify-content: center;
+}
+
+
+.editorContainer .ql-toolbar.ql-snow {
+  padding: 15px;
+  display: flex;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #F3F3F3;
+  border-top:2px solid rgb(203, 199, 199);
+  box-shadow:  0 0 5px 0 rgba(0,0,0,.5);
+}
+
+
+@page {
+  margin: 1in;
+}
+
+
+@media print {
+   body {
+    background: none;
+  }
+
+
+  .editorContainer .ql-editor {
+    width: 6.5in;
+    height: 9in;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    align-self: flex-start;
+  }
+
+
+  .editorContainer .ql-toolbar.ql-snow {
+    display: none;
+  }
+}
+
+
+.LandingPage {
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.title-1 {
+  font-size: 18px;
+  padding: 4px 0;
+  margin-bottom: 10px;
+}
+
+
+.title-2 {
+  font-size: 18px;
+  padding: 4px 0;
+  margin-bottom: 8px;
+  margin-left: 5px;
+}
+
+
+.docs {
+  border: 1px solid rgb(212, 212, 212);
+  background-color: white;
+  height: 260px;
+  width: 190px;
+  margin: 5px;
+  border-radius: 5px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.docs:hover {
+  border-color: rgb(10, 136, 209);
+}
+
+
+.docs > img {
+  height: 85%;
+  width: 80%;
+  padding: 10px 0 10px 0;
+}
+
+
+.newdocs {
+  height: 200px;
+  width: 160px;
+  margin-top: 10px;
+}
+
+
+.newdocs > img {
+  height: 90%;
+  width: 80%;
+  padding: 15px 0 10px 0;
+}
+
+
+.docs > div {
+  width: 100%;
+  border-top: 1px solid rgb(212, 212, 212);
+  padding: 5px;
+  font-size: 18px;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+
+.Docs-container-1 {
+  background-color: #F3F3F3;
+  padding: 15px 20px 20px 100px;
+}
+
+
+.Docs-container-2 {
+  padding: 15px 20px 20px 95px;
+}
+
+
+.Docs-container-2 > div {
+  gap: 10px;
+  margin-top: 5px;
+}
+
+
+.Topbar {
+  display: flex;
+  gap: 330px;
+  align-items: center;
+  padding: 3px 0 2px 0;
+}
+
+
+.logodiv{
+  display: flex;
+  gap: 10px;
+  height: 50px;
+  font-size: 25px;
+  justify-content: center;
+  align-items: center;
+  margin: 5px;
+  margin-left: 50px;
+  color: rgb(103, 103, 103);
+}
+
+
+.logodiv > img {
+  height: 75%;
+}
+
+
+.Searchbar {
+  height: 40px;
+  box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em;
+  border-radius: 7px;
+  padding: 0 20px 0 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+
+.Searchbar > img {
+  height: 50%;
+}
+
+
+.Searchbar > input {
+  border: none;
+  height: 30px;
+  width: 500px;
+  font-size: 16px;
+}
+
+
+*:focus {
+  outline: none;
 }

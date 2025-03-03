@@ -1,4 +1,4 @@
-import { generateAvatarUrl } from "./lib/dicebar";
+
 
 
 export const userData: User[] = [
@@ -119,7 +119,7 @@ export type UserData = (typeof userData)[number];
 
 export const loggedInUserData = {
   id: 5,
-  avatar: generateAvatarUrl("Jakob Hoeg"),
+  avatar: "https://avatars.githubusercontent.com/u/114422072?s=400&u=8a176a310ca29c1578a70b1c33bdeea42bf000b4&v=4",
   name: "Jakob Hoeg",
 };
 

@@ -1,4 +1,4 @@
-import { Document } from "../models/document.models";
+import Document from "../models/document.models";
 
 const defaultData = "";
 

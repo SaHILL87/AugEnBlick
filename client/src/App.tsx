@@ -6,6 +6,8 @@ import { useEffect } from "react";
 import { useUser } from "./hooks/useUser";
 import { User } from "./types";
 import { api } from "./lib/api";
+import { TextEditor } from "./components/TextEditor";
+import { LandingPage } from "./pages/landing";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const cookie = Cookies.get("token");
@@ -58,6 +60,18 @@ export default function App() {
             </AuthRoute>
           }
         />
+        <Route 
+          path="/documents/:id"
+          element={
+            <TextEditor />
+          }
+          />
+        <Route 
+          path="/home"
+          element={
+            <LandingPage />
+          }
+          />
       </Routes>
     </>
   );
