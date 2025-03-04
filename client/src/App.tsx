@@ -3,7 +3,8 @@ import { SignUpForm } from "./pages/sign-up-form";
 import Cookies from "js-cookie";
 import { LoginForm } from "./pages/login-form";
 import { TextEditor } from "./components/TextEditor";
-import { LandingPage } from "./pages/landing";
+import { Homepage } from "./pages/home";
+import GrainySpotlightScene from "./pages/landing";
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const cookie = Cookies.get("token");
@@ -44,7 +45,13 @@ export default function App() {
         <Route 
           path="/home"
           element={
-            <LandingPage />
+            <Homepage />
+          }
+          />
+        <Route 
+          path="/"
+          element={
+            <GrainySpotlightScene />
           }
           />
       </Routes>
