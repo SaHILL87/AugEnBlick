@@ -22,7 +22,7 @@ export const createAccessRequest = TryCatch(
             return next(new ErrorHandler(400,"Invalid Request"));
         }
 
-        const doc = await Document.findById(documentId);
+        const doc:any = await Document.findById(documentId).populate("owner");
 
         if (!doc) {
             return next(new ErrorHandler(404, "Document not found"));
@@ -54,7 +54,7 @@ export const createAccessRequest = TryCatch(
 
         const requestAcceptionLink = `${process.env.CORS_ORIGIN}/access-request/${accessRequest._id}`;
 
-        await requestEmail(user.email, user.email, requestMessage, String(doc._id), doc.documentName,requestAcceptionLink);
+        await requestEmail(doc.owner.email, user.email, requestMessage, String(doc._id), doc.documentName,requestAcceptionLink);
 
         res.status(201).json({
             success: true,
