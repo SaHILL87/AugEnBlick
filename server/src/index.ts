@@ -77,7 +77,7 @@ io.on("connection", (socket) => {
   socket.on("get-document", async ({ documentId, documentName, token }) => {
     currentDocumentId = documentId;
     socket.join(documentId);
-
+  
     // Initialize users list for this document if it doesn't exist
     if (!documentUsers[documentId]) {
       documentUsers[documentId] = {};
@@ -92,11 +92,16 @@ io.on("connection", (socket) => {
     if (!documentData[documentId]) {
       documentData[documentId] = null;
     }
-
+  
     try {
       const { id: userId } = jsonwebtoken.verify(token, process.env.JWT_SECRET || "") as JwtPayload;
       const user = await User.findById(userId);
-
+  
+      if (!user) {
+        socket.emit("auth-error", "User not found");
+        return;
+      }
+  
       // Add user to document with a unique cursor color
       const colors = [
         "#FF6B6B",
@@ -110,15 +115,15 @@ io.on("connection", (socket) => {
       ];
       const colorIndex =
         Object.keys(documentUsers[documentId]).length % colors.length;
-
+  
       // Add this user to the document's user list
       documentUsers[documentId][socket.id] = {
-        userName: user?.name || "Anonymous User",
+        userName: user.name || "Anonymous User",
         color: colors[colorIndex],
         cursorPosition: { index: 0, length: 0 },
         userId: socket.id
       };
-
+  
       // Emit the updated users list to all clients in this document
       io.to(documentId).emit(
         "users-changed",
@@ -127,27 +132,39 @@ io.on("connection", (socket) => {
           userId: id
         }))
       );
-
+  
+      // Find or create the document
       const document = await findOrCreateDocument({ documentId, documentName });
-
+  
       if (document) {
         // Store current document data
         documentData[documentId] = document.data;
         
-        socket.emit("load-document", document.data);
+        // Ensure we're sending valid data
+        let documentContent:any = document.data;
+        
+        // If document data is empty or invalid, provide a default
+        if (!documentContent || (typeof documentContent === 'object' && !documentContent.ops)) {
+          documentContent = { ops: [] };
+        }
+        
+        // Send document data to the client
+        socket.emit("load-document", documentContent);
         
         // Send existing drawings to the new user
         if (document.drawings && Array.isArray(document.drawings)) {
           documentDrawings[documentId] = document.drawings;
           socket.emit("load-drawings", document.drawings);
         }
+      } else {
+        // Handle the case where document creation failed
+        socket.emit("load-document", { ops: [] });
       }
     } catch (error) {
       console.error("Authentication error:", error);
       socket.emit("auth-error", "Authentication failed");
     }
   });
-
   // Handle text changes
   socket.on("send-changes", (delta) => {
     const documentId = currentDocumentId;
@@ -233,24 +250,37 @@ io.on("connection", (socket) => {
   // Handle document saving
   socket.on("save-document", async () => {
     const documentId = currentDocumentId;
-    if (!documentId) return;
+    if (!documentId) {
+      socket.emit("save-error", "No active document");
+      return;
+    }
     
     try {
       // Get current document state from the sender
       socket.emit("request-document-state");
       
       socket.once("document-state", async (data) => {
-        // Save both text content and drawings
-        await updateDocument(documentId, { 
-          data,
-          drawings: documentDrawings[documentId]
-        });
-        
-        // Update stored document data
-        documentData[documentId] = data;
-        
-        // Confirm save to the client
-        socket.emit("save-confirmed");
+        try {
+          if (!data || (typeof data === 'object' && !data.ops)) {
+            socket.emit("save-error", "Invalid document data");
+            return;
+          }
+          
+          // Save both text content and drawings
+          await updateDocument(documentId, { 
+            data,
+            drawings: documentDrawings[documentId] || []
+          });
+          
+          // Update stored document data
+          documentData[documentId] = data;
+          
+          // Confirm save to the client
+          socket.emit("save-confirmed");
+        } catch (innerError) {
+          console.error("Error in document state handler:", innerError);
+          socket.emit("save-error", "Failed to save document state");
+        }
       });
     } catch (error) {
       console.error("Error saving document:", error);
