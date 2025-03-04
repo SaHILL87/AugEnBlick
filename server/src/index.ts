@@ -13,6 +13,7 @@ import {
   getAllDocuments,
   findOrCreateDocument,
   updateDocument,
+  isUserAuthorized,
 } from "./controllers/document.controller";
 import { userRoutes } from "./routes/user.routes";
 import { errorMiddleware } from "./lib/ErrorHandler";
@@ -65,11 +66,15 @@ const documentDrawings:any = {};
 // Track document data to prevent duplicate saves
 const documentData:any = {};
 
+const SocketMap = new Map();
+
+
 io.on("connection", (socket) => {
   let currentDocumentId:any = null;
   
-  socket.on("get-all-documents", async () => {
-    const allDocuments = await getAllDocuments();
+  socket.on("get-all-documents", async ({token}) => {
+    const { id: userId } = jsonwebtoken.verify(token, process.env.JWT_SECRET || "") as JwtPayload;
+    const allDocuments = await getAllDocuments(userId);
     allDocuments.reverse(); // To get most recent docs first.
     socket.emit("all-documents", allDocuments);
   });
@@ -134,7 +139,7 @@ io.on("connection", (socket) => {
       );
   
       // Find or create the document
-      const document = await findOrCreateDocument({ documentId, documentName });
+      const document = await findOrCreateDocument({ documentId, documentName ,userId });
   
       if (document) {
         // Store current document data

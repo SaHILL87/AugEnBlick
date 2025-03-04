@@ -11,6 +11,9 @@ import Verification from "../models/verification.models";
 import { sendVerification } from "../lib/email";
 import bcrypt from "bcrypt";
 import { uploadOnCloudinary } from "../lib/cloudinary";
+import Document from "../models/document.models";
+import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
+import { Schema, SchemaTypes, Types } from "mongoose";
 
 export const registerUser = TryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -188,3 +191,49 @@ export const updateUsername = TryCatch(
     });
   }
 );
+
+
+export const isCollaborator = TryCatch(async(req,res,next)=>{
+    const { documentId , token } = req.body ;
+    const { id: userId } = jsonwebtoken.verify(token, process.env.JWT_SECRET || "") as JwtPayload;
+
+    const document = await Document.findById(documentId) ;
+
+    const userIdQuery = Types.ObjectId.isValid(userId) ? new Schema.Types.ObjectId(userId) : userId;
+    const documentIdQuery = Types.ObjectId.isValid(documentId) ? new Schema.Types.ObjectId(documentId) : documentId;
+
+    console.log(userIdQuery,documentIdQuery);
+
+    const doc = await Document.findById(documentIdQuery).populate("collaborators.userId", "username email");
+    console.log(doc);
+
+    if(!doc){
+        return res.status(404).json({message:"Document not found"});
+    }
+
+    if(doc.owner.toString() === userId){
+        return res.status(200).json({
+            isAccessible: true,
+            isCollaborator: false,
+            isOwner: true
+
+        });
+    }
+
+    const result:any = doc.collaborators.filter((collaborator:any) => collaborator.userId._id.toString() === userId);
+
+    if(result.length === 0){
+        return res.status(200).json({
+            isAccessible: false,
+            isCollaborator: false,
+            isOwner: false
+        });
+    }
+
+    return res.status(200).json({
+        isAccessible: true,
+        isCollaborator: result[0].owner.toString() !== userId,
+        isOwner: result[0].owner.toString() === userId
+    });
+
+})

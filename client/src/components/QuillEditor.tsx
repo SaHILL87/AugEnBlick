@@ -120,7 +120,6 @@ export const QuillEditor = ({
         });
 
         qul.disable();
-        qul.setText("Loading...");
         setQuill(qul);
 
         // Store cursor module reference
@@ -317,6 +316,11 @@ export const QuillEditor = ({
       documentName: documentTitle,
       token: document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || '',
     });
+
+    socket.on("access-denied",()=>{
+      console.log("hello")
+      alert("You are not authorized to edit this document");
+    })
   }, [socket, quill, documentId, documentTitle, userName]);
 
   // Export document function

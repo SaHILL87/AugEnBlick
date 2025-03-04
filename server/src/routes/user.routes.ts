@@ -1,6 +1,7 @@
 import express from "express";
 import {
    getMyDetails,
+   isCollaborator,
    loginUser,
    registerUser,
    updateUsername,
@@ -15,6 +16,7 @@ router.post("/sign-up", upload.single("avatar"), registerUser);
 router.post("/verify", verifyUser);
 router.post("/login", loginUser);
 router.get("/me", getMyDetails);
+router.post("/isContributor", isCollaborator);
 router.post("/username", authenticate, updateUsername);
 
 export { router as userRoutes };

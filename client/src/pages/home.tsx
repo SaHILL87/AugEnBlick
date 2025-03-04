@@ -1,6 +1,7 @@
 import { Dialogbox } from "@/components/editor/DialogBox";
 import { Docs } from "@/components/editor/Docs";
 import { Topbar } from "@/components/editor/TopBar";
+import { getCookie } from "@/lib/utils";
 import { useState, useEffect } from "react" ;
 import { io } from "socket.io-client";
 
@@ -27,7 +28,9 @@ export const Homepage = () => {
         const socket = io(import.meta.env.VITE_SERVER_URL) ;
 
 
-        socket.emit("get-all-documents") ;
+        socket.emit("get-all-documents",{
+            token: getCookie("token")
+        }) ;
 
 
         socket.on("all-documents", (allDocuments) => {

@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCookie } from "@/lib/utils";
 
 // Import the separated components
 import { QuillEditor } from "./QuillEditor";
 import { DrawingBoard } from "./DrawingBoard";
+import axios from "axios";
+import { getCookie } from "@/lib/utils";
 
 // Type for user information
 interface User {
@@ -21,6 +22,11 @@ interface User {
     length: number;
   };
   userId?: string;
+}
+interface DocumentAccessResponse {
+  isAccessible: boolean;
+  isCollaborator: boolean;
+  isOwner: boolean;
 }
 
 // Save interval in milliseconds
@@ -38,6 +44,30 @@ export const TextEditor = () => {
   const [exportFormat, setExportFormat] = useState<string>("pdf");
 
   const { id: documentId } = useParams();
+
+  const [accessStatus, setAccessStatus] = useState<DocumentAccessResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkDocumentAccess = async () => {
+      try {
+        // Replace with your actual API endpoint
+        const response = await axios.post<DocumentAccessResponse>(`${import.meta.env.VITE_SERVER_URL}/api/user/isContributor`,{
+          documentId,
+          token:getCookie("token")
+        });
+
+        setAccessStatus(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Failed to check document access', error);
+        setAccessStatus(null);
+        setIsLoading(false);
+      }
+    };
+
+    checkDocumentAccess();
+  }, [documentId]);
 
   // Initialize username on component mount
   useEffect(() => {
@@ -107,6 +137,11 @@ export const TextEditor = () => {
     setTimeout(() => {
       setIsSaving(false);
     }, 1000);
+
+    socket.on("access-denied",()=>{
+      alert("You are not authorized to edit this document");
+    })
+
   }, [socket, documentId, documentTitle]);
 
   // Toggle between editor and drawing mode
@@ -126,6 +161,18 @@ export const TextEditor = () => {
     },
     []
   );
+
+  if(isLoading || !accessStatus?.isAccessible){
+    return (
+      <div>
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : (
+          <div>Access Denied</div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
