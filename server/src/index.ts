@@ -22,7 +22,6 @@ import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import { accessRouter } from "./routes/access.routes";
 import { versionRoutes } from "./routes/version.routes";
 
-
 const app = express();
 
 app.use(
@@ -32,7 +31,7 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: '50mb' })); // Increased limit for drawings
+app.use(express.json({ limit: "50mb" })); // Increased limit for drawings
 app.use(cookieParser());
 app.use(morgan("dev"));
 
@@ -42,7 +41,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/access", accessRouter);
 app.use("/api/versions", versionRoutes);
 
-app.use(errorMiddleware)
+app.use(errorMiddleware);
 
 const PORT = Number(process.env.PORT || 3000);
 
@@ -65,20 +64,22 @@ const io = new Server(server, {
 });
 
 // Store active users for each document
-const documentUsers:any = {};
+const documentUsers: any = {};
 // Store drawing data for each document as object arrays
-const documentDrawings:any = {};
+const documentDrawings: any = {};
 // Track document data to prevent duplicate saves
-const documentData:any = {};
+const documentData: any = {};
 
 const SocketMap = new Map();
 
-
 io.on("connection", (socket) => {
-  let currentDocumentId:any = null;
-  
-  socket.on("get-all-documents", async ({token}) => {
-    const { id: userId } = jsonwebtoken.verify(token, process.env.JWT_SECRET || "") as JwtPayload;
+  let currentDocumentId: any = null;
+
+  socket.on("get-all-documents", async ({ token }) => {
+    const { id: userId } = jsonwebtoken.verify(
+      token,
+      process.env.JWT_SECRET || ""
+    ) as JwtPayload;
     const allDocuments = await getAllDocuments(userId);
     allDocuments.reverse(); // To get most recent docs first.
     socket.emit("all-documents", allDocuments);
@@ -87,31 +88,34 @@ io.on("connection", (socket) => {
   socket.on("get-document", async ({ documentId, documentName, token }) => {
     currentDocumentId = documentId;
     socket.join(documentId);
-  
+
     // Initialize users list for this document if it doesn't exist
     if (!documentUsers[documentId]) {
       documentUsers[documentId] = {};
     }
-    
+
     // Initialize drawings for this document if it doesn't exist
     if (!documentDrawings[documentId]) {
       documentDrawings[documentId] = [];
     }
-    
+
     // Initialize document data tracker
     if (!documentData[documentId]) {
       documentData[documentId] = null;
     }
-  
+
     try {
-      const { id: userId } = jsonwebtoken.verify(token, process.env.JWT_SECRET || "") as JwtPayload;
+      const { id: userId } = jsonwebtoken.verify(
+        token,
+        process.env.JWT_SECRET || ""
+      ) as JwtPayload;
       const user = await User.findById(userId);
-  
+
       if (!user) {
         socket.emit("auth-error", "User not found");
         return;
       }
-  
+
       // Add user to document with a unique cursor color
       const colors = [
         "#FF6B6B",
@@ -125,42 +129,51 @@ io.on("connection", (socket) => {
       ];
       const colorIndex =
         Object.keys(documentUsers[documentId]).length % colors.length;
-  
+
       // Add this user to the document's user list
       documentUsers[documentId][socket.id] = {
         userName: user.email || "Anonymous User",
         color: colors[colorIndex],
         cursorPosition: { index: 0, length: 0 },
-        userId: socket.id
+        userId: socket.id,
       };
-  
+
       // Emit the updated users list to all clients in this document
       io.to(documentId).emit(
         "users-changed",
-        Object.entries(documentUsers[documentId]).map(([id, userData]:any) => ({
-          ...userData,
-          userId: id
-        }))
+        Object.entries(documentUsers[documentId]).map(
+          ([id, userData]: any) => ({
+            ...userData,
+            userId: id,
+          })
+        )
       );
-  
+
       // Find or create the document
-      const document = await findOrCreateDocument({ documentId, documentName ,userId });
-  
+      const document = await findOrCreateDocument({
+        documentId,
+        documentName,
+        userId,
+      });
+
       if (document) {
         // Store current document data
         documentData[documentId] = document.data;
-        
+
         // Ensure we're sending valid data
-        let documentContent:any = document.data;
-        
+        let documentContent: any = document.data;
+
         // If document data is empty or invalid, provide a default
-        if (!documentContent || (typeof documentContent === 'object' && !documentContent.ops)) {
+        if (
+          !documentContent ||
+          (typeof documentContent === "object" && !documentContent.ops)
+        ) {
           documentContent = { ops: [] };
         }
-        
+
         // Send document data to the client
         socket.emit("load-document", documentContent);
-        
+
         // Send existing drawings to the new user
         if (document.drawings && Array.isArray(document.drawings)) {
           documentDrawings[documentId] = document.drawings;
@@ -177,9 +190,10 @@ io.on("connection", (socket) => {
   });
   // Handle text changes
   socket.on("send-changes", (delta) => {
+    console.log(delta);
     const documentId = currentDocumentId;
     if (!documentId) return;
-    
+
     // Only broadcast to others, not back to sender
     socket.broadcast.to(documentId).emit("receive-changes", delta);
   });
@@ -188,10 +202,10 @@ io.on("connection", (socket) => {
   socket.on("font-change", (fontData) => {
     const documentId = currentDocumentId;
     if (!documentId) return;
-    
+
     socket.broadcast.to(documentId).emit("receive-font-change", {
       userId: socket.id,
-      ...fontData
+      ...fontData,
     });
   });
 
@@ -199,23 +213,23 @@ io.on("connection", (socket) => {
   socket.on("drawing-update", (elements) => {
     const documentId = currentDocumentId;
     if (!documentId) return;
-    
+
     if (Array.isArray(elements)) {
       // Full elements array update
       documentDrawings[documentId] = elements;
       socket.broadcast.to(documentId).emit("drawings-updated", elements);
-    } else if (elements && typeof elements === 'object') {
+    } else if (elements && typeof elements === "object") {
       // Single element update
       const elementExists = documentDrawings[documentId].findIndex(
-        (el:any) => el.id === elements.id
+        (el: any) => el.id === elements.id
       );
-      
+
       if (elementExists >= 0) {
         documentDrawings[documentId][elementExists] = elements;
       } else {
         documentDrawings[documentId].push(elements);
       }
-      
+
       socket.broadcast.to(documentId).emit("drawing-element-updated", elements);
     }
   });
@@ -224,7 +238,7 @@ io.on("connection", (socket) => {
   socket.on("update-drawings-batch", (elements) => {
     const documentId = currentDocumentId;
     if (!documentId) return;
-    
+
     if (Array.isArray(elements)) {
       documentDrawings[documentId] = elements;
       socket.broadcast.to(documentId).emit("drawings-updated", elements);
@@ -235,7 +249,7 @@ io.on("connection", (socket) => {
   socket.on("clear-drawings", () => {
     const documentId = currentDocumentId;
     if (!documentId) return;
-    
+
     documentDrawings[documentId] = [];
     socket.broadcast.to(documentId).emit("drawings-cleared");
   });
@@ -244,7 +258,7 @@ io.on("connection", (socket) => {
   socket.on("cursor-move", (cursorData) => {
     const documentId = currentDocumentId;
     if (!documentId) return;
-    
+
     // Update stored cursor position for this user
     if (documentUsers[documentId] && documentUsers[documentId][socket.id]) {
       documentUsers[documentId][socket.id].cursorPosition = cursorData;
@@ -264,27 +278,27 @@ io.on("connection", (socket) => {
       socket.emit("save-error", "No active document");
       return;
     }
-    
+
     try {
       // Get current document state from the sender
       socket.emit("request-document-state");
-      
+
       socket.once("document-state", async (data) => {
         try {
-          if (!data || (typeof data === 'object' && !data.ops)) {
+          if (!data || (typeof data === "object" && !data.ops)) {
             socket.emit("save-error", "Invalid document data");
             return;
           }
-          
+
           // Save both text content and drawings
-          await updateDocument(documentId, { 
+          await updateDocument(documentId, {
             data,
-            drawings: documentDrawings[documentId] || []
+            drawings: documentDrawings[documentId] || [],
           });
-          
+
           // Update stored document data
           documentData[documentId] = data;
-          
+
           // Confirm save to the client
           socket.emit("save-confirmed");
         } catch (innerError) {
@@ -302,13 +316,15 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     if (currentDocumentId && documentUsers[currentDocumentId]) {
       delete documentUsers[currentDocumentId][socket.id];
-      
+
       io.to(currentDocumentId).emit(
         "users-changed",
-        Object.entries(documentUsers[currentDocumentId]).map(([id, userData]:any) => ({
-          ...userData,
-          userId: id
-        }))
+        Object.entries(documentUsers[currentDocumentId]).map(
+          ([id, userData]: any) => ({
+            ...userData,
+            userId: id,
+          })
+        )
       );
 
       // Clean up empty documents

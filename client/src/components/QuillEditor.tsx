@@ -266,7 +266,9 @@ export const QuillEditor = forwardRef<QuillEditorHandle, QuillEditorProps> (({
         }
 
         const data = await response.json();
-        const processedText = data.corrections[0].corrected;
+        console.log(data);
+        const processedText = data[responseKey];
+        console.log(processedText);
         // Apply the processed text with typing animation
         simulateTypingEffect(processedText, range);
       } catch (error) {
@@ -283,79 +285,82 @@ export const QuillEditor = forwardRef<QuillEditorHandle, QuillEditorProps> (({
   );
 
   // AI Copilot function
-  const handleAiCopilot = useCallback(async () => {
-    if (!quill || !aiPrompt.trim()) return;
+  const handleAiCopilot = useCallback(
+    async (aiPrompt: string) => {
+      if (!quill || !aiPrompt.trim()) return;
 
-    setIsAiProcessing(true);
-    setAiSidebarOpen(false);
+      setIsAiProcessing(true);
+      setAiSidebarOpen(false);
 
-    try {
-      // Get cursor position or selection
-      const range = quill.getSelection() || {
-        index: quill.getLength() - 1,
-        length: 0,
-      };
-      cursorPosition.current = range.index + range.length;
+      try {
+        // Get cursor position o  r selection
+        const range = quill.getSelection() || {
+          index: quill.getLength() - 1,
+          length: 0,
+        };
+        cursorPosition.current = range.index + range.length;
 
-      // Call generate endpoint
-      const response = await fetch(`${API_URL}/generate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt: aiPrompt }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-
-      const data = await response.json();
-      const generatedText = data.generated_text;
-
-      // Before inserting text, let others know we're going to insert AI content
-      if (socket) {
-        socket.emit("ai-copilot-start", {
-          position: cursorPosition.current,
-          userName,
+        // Call generate endpoint
+        const response = await fetch(`${API_URL}/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ prompt: aiPrompt }),
         });
-      }
 
-      // Apply the generated text with a typing effect
-      isAITriggeredChange.current = true;
-
-      // Insert a newline first if we're not at the beginning
-      if (cursorPosition.current > 0) {
-        quill.insertText(cursorPosition.current, "\n\n");
-        cursorPosition.current += 2;
-      }
-
-      // Insert AI-generated text with typing animation
-      let currentIndex = 0;
-      const typingInterval = setInterval(() => {
-        if (currentIndex < generatedText.length) {
-          quill.insertText(
-            (cursorPosition as any).current + currentIndex,
-            generatedText[currentIndex]
-          );
-          currentIndex++;
-        } else {
-          clearInterval(typingInterval);
-          setIsAiProcessing(false);
-          isAITriggeredChange.current = false;
-          setAiPrompt("");
-
-          // Notify others that AI insertion is complete
-          if (socket) {
-            socket.emit("ai-copilot-end");
-          }
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
         }
-      }, 20);
-    } catch (error) {
-      console.error("Error with AI Copilot:", error);
-      setIsAiProcessing(false);
-    }
-  }, [quill, aiPrompt, socket, userName]);
+
+        const data = await response.json();
+        const generatedText = data.generated_text;
+
+        // Before inserting text, let others know we're going to insert AI content
+        if (socket) {
+          socket.emit("ai-copilot-start", {
+            position: cursorPosition.current,
+            userName,
+          });
+        }
+
+        // Apply the generated text with a typing effect
+        isAITriggeredChange.current = true;
+
+        // Insert a newline first if we're not at the beginning
+        if (cursorPosition.current > 0) {
+          quill.insertText(cursorPosition.current, "\n\n");
+          cursorPosition.current += 2;
+        }
+
+        // Insert AI-generated text with typing animation
+        let currentIndex = 0;
+        const typingInterval = setInterval(() => {
+          if (currentIndex < generatedText.length) {
+            quill.insertText(
+              (cursorPosition as any).current + currentIndex,
+              generatedText[currentIndex]
+            );
+            currentIndex++;
+          } else {
+            clearInterval(typingInterval);
+            setIsAiProcessing(false);
+            isAITriggeredChange.current = false;
+            setAiPrompt("");
+
+            // Notify others that AI insertion is complete
+            if (socket) {
+              socket.emit("ai-copilot-end");
+            }
+          }
+        }, 20);
+      } catch (error) {
+        console.error("Error with AI Copilot:", error);
+        setIsAiProcessing(false);
+      }
+    },
+    [quill, aiPrompt, socket, userName]
+  );
 
   // Summarize document function
   const summarizeDocument = useCallback(async () => {
@@ -584,6 +589,7 @@ export const QuillEditor = forwardRef<QuillEditorHandle, QuillEditorProps> (({
       if (source !== "user" && !isAITriggeredChange.current) return;
 
       setIsLocalChange(true);
+      console.log(delta);
       socket.emit("send-changes", delta);
 
       setTimeout(() => {
@@ -835,7 +841,12 @@ export const QuillEditor = forwardRef<QuillEditorHandle, QuillEditorProps> (({
   return (
     <div className="flex flex-col h-full relative" ref={containerRef}>
       {/* Sidebar AI Copilot */}
-        <AICopilotSidebar aiSidebarOpen={aiSidebarOpen}  setAiSidebarOpen={setAiSidebarOpen} key={"nice"} />
+      <AICopilotSidebar
+        aiSidebarOpen={aiSidebarOpen}
+         setAiSidebarOpen={setAiSidebarOpen}
+        key={"nice"}
+        onAiGenerate={handleAiCopilot}
+      />
 
       {/* Selection Toolbar */}
       <div ref={toolbarRef}>

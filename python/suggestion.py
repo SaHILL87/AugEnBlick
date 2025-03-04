@@ -139,4 +139,4 @@ def health_check():
 if __name__ == '__main__':
     # Ensure you have a GROQ_API_KEY environment variable set
     
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)

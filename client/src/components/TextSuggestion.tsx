@@ -97,7 +97,7 @@ const TextEditingModal: React.FC<TextEditingModalProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/analyze_text", {
+      const response = await fetch("http://localhost:5001/analyze_text", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
