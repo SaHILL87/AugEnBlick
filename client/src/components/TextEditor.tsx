@@ -29,7 +29,7 @@ const SAVE_INTERVAL_MS = 2000;
 export const TextEditor = () => {
   const [socket, setSocket] = useState<Socket>();
   const [userName, setUserName] = useState<string>("");
-  const [documentTitle, setDocumentTitle] = 
+  const [documentTitle, setDocumentTitle] =
     useState<string>("Untitled Document");
   const [showDrawing, setShowDrawing] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -67,12 +67,12 @@ export const TextEditor = () => {
   useEffect(() => {
     const skt = io(import.meta.env.VITE_SERVER_URL);
     setSocket(skt);
-    
+
     // Set up handler for active users
     skt.on("users-changed", (users: User[]) => {
       setActiveUsers(users);
     });
-    
+
     return () => {
       skt.disconnect();
     };
@@ -129,7 +129,7 @@ export const TextEditor = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Header with controls */}
+      {/* Header with pastel-colored controls */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
@@ -139,7 +139,7 @@ export const TextEditor = () => {
                 value={documentTitle}
                 onChange={handleTitleChange}
                 onBlur={saveDocument}
-                className="text-xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+                className="text-xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 rounded px-2 py-1 bg-blue-50 text-blue-800"
                 aria-label="Document title"
               />
               <div className="flex items-center text-sm text-gray-500">
@@ -149,13 +149,17 @@ export const TextEditor = () => {
 
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                <Label htmlFor="mode-toggle" className="text-sm font-medium">
+                <Label 
+                  htmlFor="mode-toggle" 
+                  className="text-sm font-medium text-purple-800"
+                >
                   {showDrawing ? "Drawing Mode" : "Text Mode"}
                 </Label>
                 <Switch
                   id="mode-toggle"
                   checked={showDrawing}
                   onCheckedChange={toggleDrawingMode}
+                  className="bg-purple-100"
                 />
               </div>
 
@@ -164,14 +168,19 @@ export const TextEditor = () => {
                   <select
                     value={exportFormat}
                     onChange={(e) => setExportFormat(e.target.value)}
-                    className="text-sm border rounded p-1"
+                    className="text-sm border rounded p-1 bg-mint-50 text-green-800"
                   >
                     <option value="pdf">PDF</option>
                     <option value="docx">HTML (Word)</option>
                   </select>
                 </div>
 
-                <Button onClick={toggleActiveUsers} variant="outline" size="sm">
+                <Button 
+                  onClick={toggleActiveUsers} 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-pink-50 text-pink-800 hover:bg-pink-100"
+                >
                   <Users className="h-4 w-4 mr-1" />
                   Users ({activeUsers.length})
                 </Button>
@@ -186,8 +195,8 @@ export const TextEditor = () => {
         <div className="grid grid-cols-1 gap-4">
           {/* Active Users Panel (Conditional) */}
           {showActiveUsers && (
-            <div className="bg-white rounded-lg shadow p-4 mb-4">
-              <h3 className="text-lg font-medium mb-2">Active Users</h3>
+            <div className="bg-white rounded-lg shadow p-4 mb-4 bg-lavender-50">
+              <h3 className="text-lg font-medium mb-2 text-purple-800">Active Users</h3>
               <ul className="space-y-2">
                 {activeUsers.map((user, index) => (
                   <li key={index} className="flex items-center space-x-2">
@@ -208,18 +217,18 @@ export const TextEditor = () => {
               defaultValue={showDrawing ? "drawing" : "text"}
               value={showDrawing ? "drawing" : "text"}
             >
-              <TabsList className="bg-gray-100 border-b p-1">
+              <TabsList className="bg-blue-50 border-b p-1">
                 <TabsTrigger
                   value="text"
                   onClick={() => setShowDrawing(false)}
-                  className="px-4 py-2"
+                  className="px-4 py-2 text-blue-800 data-[state=active]:bg-blue-100"
                 >
                   Text Editor
                 </TabsTrigger>
                 <TabsTrigger
                   value="drawing"
                   onClick={() => setShowDrawing(true)}
-                  className="px-4 py-2"
+                  className="px-4 py-2 text-purple-800 data-[state=active]:bg-purple-100"
                 >
                   Drawing Board
                 </TabsTrigger>
@@ -235,6 +244,7 @@ export const TextEditor = () => {
                   saveDocument={saveDocument}
                   activeUsers={activeUsers}
                   exportFormat={exportFormat}
+                  
                 />
               </TabsContent>
 
@@ -242,10 +252,7 @@ export const TextEditor = () => {
                 value="drawing"
                 className={!showDrawing ? "hidden" : ""}
               >
-                <DrawingBoard
-                  socket={socket}
-                  documentId={documentId}
-                />
+                <DrawingBoard socket={socket} documentId={documentId} />
               </TabsContent>
             </Tabs>
           </div>

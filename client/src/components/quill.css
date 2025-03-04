@@ -1,0 +1,108 @@
+.ql-toolbar.ql-snow {
+    border-color: var(--border) !important;
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+    background-color: #f8fafc;
+  }
+  
+  .ql-container.ql-snow {
+    border-color: var(--border) !important;
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+    background-color: white;
+  }
+  
+  .ql-editor {
+    min-height: 65vh;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  
+  .ql-editor p {
+    margin-bottom: 1rem;
+  }
+  
+  .ql-editor h1, .ql-editor h2, .ql-editor h3, .ql-editor h4, .ql-editor h5, .ql-editor h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  
+  .ql-editor h1 {
+    font-size: 2rem;
+  }
+  
+  .ql-editor h2 {
+    font-size: 1.75rem;
+  }
+  
+  .ql-editor h3 {
+    font-size: 1.5rem;
+  }
+  
+  /* Excalidraw Customizations */
+  .excalidraw .App-menu_top .buttonList {
+    background-color: #f8fafc;
+  }
+  
+  .excalidraw .App-menu_bottom {
+    background-color: #f8fafc;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .ql-toolbar .ql-formats {
+      margin-right: 8px;
+    }
+    
+    .ql-snow .ql-picker {
+      font-size: 12px;
+    }
+  }
+  
+  /* Tooltip styles */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  /* AI Sidebar animations */
+  @keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  
+  @keyframes slideOut {
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
+  }
+  
+  .slide-in {
+    animation: slideIn 0.3s forwards;
+  }
+  
+  .slide-out {
+    animation: slideOut 0.3s forwards;
+  }
