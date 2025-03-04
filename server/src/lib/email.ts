@@ -213,10 +213,9 @@ export const sendCollaboratorEmail = async ({
   const emailContent = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
       <p>Hello,</p>
-      <p>${creatorName} (${creatorEmail}) has invited you to collaborate on a Time Capsule.</p>
+      <p>${creatorName} (${creatorEmail}) has invited you to collaborate on a Document.</p>
       <h3>${title}</h3>
       <p>${description}</p>
-      <p>${message}</p>
       ${
         accessLink
           ? `<p><strong>Access Link:</strong> <a href="${accessLink}" target="_blank">${accessLink}</a></p>`
@@ -235,4 +234,60 @@ export const sendCollaboratorEmail = async ({
   };
 
   await transporter.sendMail(mailOptions);
+};
+
+
+export const requestEmail = async (
+  email: string,
+  name: string,
+  message: string,
+  documentId: string,
+  title: string,
+  requestAcceptionLink: string
+) => {
+  const emailContent = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <p>Hello,</p>
+      <p>${name} has requested access to your Document ${documentId}.</p>
+      <p>Message: ${message}</p>
+      <p>Access the request <a href="${requestAcceptionLink}">here</a>.</p>
+      <p>Thank you!</p>
+    </div>
+  `;
+
+  const mailOptions = {
+    from: `"" <"ngenx2831@gmail.com">`,
+    to: email,
+    subject: `Request for document access: ${title}`,
+    html: emailContent,
+  };
+
+  await transporter.sendMail(mailOptions);
+
+};
+
+export const sendAccessRequestEmail = async (
+  email: string,
+  documentId: string,
+  title: string,
+  status: string,
+  
+) => {
+  const emailContent = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <p>Hello,</p>
+      <p>Your request for access to the Document ${documentId} has been ${status}.</p>
+      <p>Thank you!</p>
+    </div>
+  `;
+
+  const mailOptions = {
+    from: `"" <"ngenx2831@gmail.com">`,
+    to: email,
+    subject: `Request for document access: ${title}`,
+    html: emailContent,
+  };
+
+  await transporter.sendMail(mailOptions);
+
 };

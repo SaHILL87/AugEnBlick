@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./global.css";
 import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
-import { Toaster } from "./components/ui/sonner.tsx";
+import { Toaster } from "./components/ui/sonner";
 import ScreenshotPreventionWrapper from "./utils/PreventScreenshot.tsx";
 import { ThemeProvider } from "./components/theme-provider.tsx";
 

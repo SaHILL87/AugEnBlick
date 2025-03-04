@@ -220,20 +220,20 @@ export const isCollaborator = TryCatch(async(req,res,next)=>{
         });
     }
 
-    const result:any = doc.collaborators.filter((collaborator:any) => collaborator.userId._id.toString() === userId);
+    let isAccessible = false
 
-    if(result.length === 0){
+    doc.collaborators.forEach((collaborator:any)=>{
+      if(collaborator._id.toString()===userId){
+        isAccessible = true;
+      }
+
+    })
+
+  
         return res.status(200).json({
-            isAccessible: false,
+            isAccessible: isAccessible,
             isCollaborator: false,
             isOwner: false
         });
-    }
-
-    return res.status(200).json({
-        isAccessible: true,
-        isCollaborator: result[0].owner.toString() !== userId,
-        isOwner: result[0].owner.toString() === userId
-    });
-
+    
 })

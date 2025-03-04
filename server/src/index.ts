@@ -19,6 +19,8 @@ import { userRoutes } from "./routes/user.routes";
 import { errorMiddleware } from "./lib/ErrorHandler";
 import { User } from "./models/user.models";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
+import { accessRouter } from "./routes/access.routes";
+
 
 const app = express();
 
@@ -36,6 +38,7 @@ app.use(morgan("dev"));
 const server = http.createServer(app);
 
 app.use("/api/user", userRoutes);
+app.use("/api/access", accessRouter);
 
 app.use(errorMiddleware)
 
@@ -123,7 +126,7 @@ io.on("connection", (socket) => {
   
       // Add this user to the document's user list
       documentUsers[documentId][socket.id] = {
-        userName: user.name || "Anonymous User",
+        userName: user.email || "Anonymous User",
         color: colors[colorIndex],
         cursorPosition: { index: 0, length: 0 },
         userId: socket.id

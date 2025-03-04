@@ -5,6 +5,7 @@ import { LoginForm } from "./pages/login-form";
 import { TextEditor } from "./components/TextEditor";
 import { Homepage } from "./pages/home";
 import GrainySpotlightScene from "./pages/landing";
+import AccessRequestsPage from "./pages/access-request";
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const cookie = Cookies.get("token");
@@ -54,6 +55,8 @@ export default function App() {
             <GrainySpotlightScene />
           }
           />
+
+        <Route path="/access-request/:id" element={<AccessRequestsPage />} />
       </Routes>
     </>
   );

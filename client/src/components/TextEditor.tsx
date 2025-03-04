@@ -12,6 +12,8 @@ import { QuillEditor } from "./QuillEditor";
 import { DrawingBoard } from "./DrawingBoard";
 import axios from "axios";
 import { getCookie } from "@/lib/utils";
+import { ActiveUsersDrawer } from "./editor/active-users";
+import { RequestAccess } from "./editor/request-access";
 
 // Type for user information
 interface User {
@@ -30,7 +32,7 @@ interface DocumentAccessResponse {
 }
 
 // Save interval in milliseconds
-const SAVE_INTERVAL_MS = 2000;
+const SAVE_INTERVAL_MS = 10000;
 
 export const TextEditor = () => {
   const [socket, setSocket] = useState<Socket>();
@@ -168,7 +170,9 @@ export const TextEditor = () => {
         {isLoading ? (
           <div>Loading...</div>
         ) : (
-          <div>Access Denied</div>
+          <div className="h-screen flex items-center justify-center">
+            <RequestAccess documentId={documentId!} />
+          </div>
         )}
       </div>
     )
@@ -241,22 +245,8 @@ export const TextEditor = () => {
       <div className="flex-1 container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 gap-4">
           {/* Active Users Panel (Conditional) */}
-          {showActiveUsers && (
-            <div className="bg-white rounded-lg shadow p-4 mb-4 bg-lavender-50">
-              <h3 className="text-lg font-medium mb-2 text-purple-800">Active Users</h3>
-              <ul className="space-y-2">
-                {activeUsers.map((user, index) => (
-                  <li key={index} className="flex items-center space-x-2">
-                    <span
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: user.color }}
-                    ></span>
-                    <span>{user.userName}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {showActiveUsers && <ActiveUsersDrawer activeUsers={activeUsers} setShowActiveUsers={setShowActiveUsers} showActiveUsers={showActiveUsers} />
+          }
 
           {/* Editor/Drawing Container */}
           <div className="bg-white rounded-lg shadow overflow-hidden">

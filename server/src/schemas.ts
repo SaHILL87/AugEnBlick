@@ -24,3 +24,22 @@ export interface IDocs extends Document {
     owner: Schema.Types.ObjectId;
 }
 
+export interface IDocVersion extends Document {
+    _id: Schema.Types.ObjectId;
+    documentId: Schema.Types.ObjectId;
+    data: object;
+    drawings: any;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface IAccessRequest extends Document {
+    _id: Schema.Types.ObjectId;
+    email: string;
+    documentId: Schema.Types.ObjectId;
+    userId: Schema.Types.ObjectId;
+    status : "pending" | "invited" | "accepted" | "rejected";
+    requestMessage: string;
+    requestDate: Date;
+    documentOwner: Schema.Types.ObjectId;
+}
