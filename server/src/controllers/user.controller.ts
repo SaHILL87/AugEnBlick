@@ -63,7 +63,9 @@ export const loginUser = TryCatch(
     if (!user.isVerified) {
       const verificationCode = generateVerificationToken();
 
-      const existingVerification = await Verification.findOne({ user: user._id });
+      const existingVerification = await Verification.findOne({
+        user: user._id,
+      });
 
       if (existingVerification) {
         await existingVerification.deleteOne({ user: user._id });
@@ -192,53 +194,57 @@ export const updateUsername = TryCatch(
   }
 );
 
+export const isCollaborator = TryCatch(async (req, res, next) => {
+  const { documentId, token } = req.body;
+  const { id: userId } = jsonwebtoken.verify(
+    token,
+    process.env.JWT_SECRET || ""
+  ) as JwtPayload;
 
-export const isCollaborator = TryCatch(async(req,res,next)=>{
-    const { documentId , token } = req.body ;
-    const { id: userId } = jsonwebtoken.verify(token, process.env.JWT_SECRET || "") as JwtPayload;
+  const document = await Document.findById(documentId);
 
-    const document = await Document.findById(documentId) ;
+  const userIdQuery = Types.ObjectId.isValid(userId)
+    ? new Schema.Types.ObjectId(userId)
+    : userId;
+  const documentIdQuery = Types.ObjectId.isValid(documentId)
+    ? new Schema.Types.ObjectId(documentId)
+    : documentId;
 
-    const userIdQuery = Types.ObjectId.isValid(userId) ? new Schema.Types.ObjectId(userId) : userId;
-    const documentIdQuery = Types.ObjectId.isValid(documentId) ? new Schema.Types.ObjectId(documentId) : documentId;
+  console.log(userIdQuery, documentIdQuery);
 
-    console.log(userIdQuery,documentIdQuery);
+  const doc = await Document.findById(documentIdQuery).populate(
+    "collaborators.userId",
+    "username email"
+  );
+  console.log("doc", doc);
 
-    const doc = await Document.findById(documentIdQuery).populate("collaborators.userId", "username email");
-    console.log(doc);
+  if (!doc) {
+    return res.status(200).json({
+      isAccessible: true,
+      isCollaborator: false,
+      isOwner: true,
+    });
+  }
 
-    if(!doc){
-        return res.status(200).json({
-          isAccessible: true,
-          isCollaborator: false,
-          isOwner: true
+  if (doc.owner.toString() === userId) {
+    return res.status(200).json({
+      isAccessible: true,
+      isCollaborator: false,
+      isOwner: true,
+    });
+  }
 
-      });;
+  let isAccessible = false;
+
+  doc.collaborators.forEach((collaborator: any) => {
+    if (collaborator._id.toString() === userId) {
+      isAccessible = true;
     }
+  });
 
-    if(doc.owner.toString() === userId){
-        return res.status(200).json({
-            isAccessible: true,
-            isCollaborator: false,
-            isOwner: true
-
-        });
-    }
-
-    let isAccessible = false
-
-    doc.collaborators.forEach((collaborator:any)=>{
-      if(collaborator._id.toString()===userId){
-        isAccessible = true;
-      }
-
-    })
-
-  
-        return res.status(200).json({
-            isAccessible: isAccessible,
-            isCollaborator: false,
-            isOwner: false
-        });
-    
-})
+  return res.status(200).json({
+    isAccessible: isAccessible,
+    isCollaborator: false,
+    isOwner: false,
+  });
+});

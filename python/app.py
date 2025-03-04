@@ -61,7 +61,7 @@ def generate_text():
         "model": "mistral-large-latest",
         "messages": [{
             "role": "user",
-            "content": f"You are an AI writing assistant. Continue this text: {prompt}"
+            "content": f"You are an AI writing assistant.Do not write anything in bold. Continue this text: {prompt}"
         }],
         "temperature": 0.7,
         "top_p": 0.95,

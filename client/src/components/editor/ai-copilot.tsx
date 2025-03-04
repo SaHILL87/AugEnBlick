@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,46 +16,65 @@ interface ChatMessage {
 interface AICopilotSidebarProps {
   aiSidebarOpen: boolean;
   setAiSidebarOpen: (open: boolean) => void;
+  onAiGenerate: (prompt: string) => Promise<void>;
 }
 
 export function AICopilotSidebar({
   aiSidebarOpen,
   setAiSidebarOpen,
+  onAiGenerate,
 }: AICopilotSidebarProps) {
   const [aiPrompt, setAiPrompt] = useState("");
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
-  const handleAiCopilot = () => {
+  const handleAiCopilot = useCallback(async () => {
     if (!aiPrompt.trim()) return;
-    
+
     // Add the prompt to chat history
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       content: aiPrompt,
       timestamp: new Date(),
-      isProcessed: false
+      isProcessed: false,
     };
-    
-    setChatHistory([...chatHistory, newMessage]);
+
+    setChatHistory((prev) => [...prev, newMessage]);
     setIsAiProcessing(true);
-    
-    // Simulate AI processing
-    setTimeout(() => {
+
+    try {
+      // Call the passed generate function
+      await onAiGenerate(aiPrompt);
+
       // Update the message to show it's been processed
-      setChatHistory(prev => 
-        prev.map(msg => 
+      setChatHistory((prev) =>
+        prev.map((msg) =>
           msg.id === newMessage.id ? { ...msg, isProcessed: true } : msg
         )
       );
-      setAiPrompt("");
-      setIsAiProcessing(false);
-    }, 1500);
-  };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+      setAiPrompt("");
+    } catch (error) {
+      console.error("AI Generation Error:", error);
+      // Optionally handle error in chat history
+      setChatHistory((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id
+            ? {
+                ...msg,
+                content: `Error: ${
+                  error instanceof Error ? error.message : "Unknown error"
+                }`,
+              }
+            : msg
+        )
+      );
+    } finally {
+      setIsAiProcessing(false);
+    }
+  }, [aiPrompt, onAiGenerate]);
+
+  // Rest of the component remains the same...
 
   return (
     <div
@@ -70,23 +89,25 @@ export function AICopilotSidebar({
           <Sparkles className="h-5 w-5 text-blue-500" />
           <h2 className="text-xl font-semibold">AI Copilot</h2>
         </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setAiSidebarOpen(false)}
           className="h-8 w-8"
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
-      
+
       {/* Chat History */}
       <ScrollArea className="flex-1 p-4">
         {chatHistory.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-4 text-muted-foreground">
             <Sparkles className="h-12 w-12 mb-4 text-blue-200" />
             <p className="text-lg font-medium mb-2">Your AI Assistant</p>
-            <p className="text-sm">Ask me to write or generate content for you.</p>
+            <p className="text-sm">
+              Ask me to write or generate content for you.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -98,22 +119,28 @@ export function AICopilotSidebar({
                     <span>{formatTime(message.timestamp)}</span>
                   </div>
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-6 w-6"
-                      onClick={() => setChatHistory(chatHistory.filter(msg => msg.id !== message.id))}
+                      onClick={() =>
+                        setChatHistory(
+                          chatHistory.filter((msg) => msg.id !== message.id)
+                        )
+                      }
                     >
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
-                <div className={cn(
-                  "p-3 rounded-lg text-sm",
-                  message.isProcessed 
-                    ? "bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200" 
-                    : "bg-muted"
-                )}>
+                <div
+                  className={cn(
+                    "p-3 rounded-lg text-sm",
+                    message.isProcessed
+                      ? "bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200"
+                      : "bg-muted"
+                  )}
+                >
                   {message.content}
                   {!message.isProcessed && (
                     <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
@@ -126,9 +153,9 @@ export function AICopilotSidebar({
           </div>
         )}
       </ScrollArea>
-      
+
       <Separator />
-      
+
       {/* Input Area */}
       <div className="p-4 bg-muted/30">
         <Textarea
@@ -140,7 +167,7 @@ export function AICopilotSidebar({
           className="w-full resize-none mb-3 bg-background"
           disabled={isAiProcessing}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               handleAiCopilot();
             }
@@ -163,4 +190,9 @@ export function AICopilotSidebar({
       </div>
     </div>
   );
+}
+
+// Helper function for formatting time (which was missing in the original code)
+function formatTime(date: Date) {
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
