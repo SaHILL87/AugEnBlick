@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import TextEditingModal from "./TextSuggestion";
 
 // QuillCursors interface
 interface QuillCursors {
@@ -145,6 +146,7 @@ export const QuillEditor = ({
   const [quill, setQuill] = useState<Quill>();
   const [cursors, setCursors] = useState<QuillCursors | null>(null);
   const [isLocalChange, setIsLocalChange] = useState(false);
+  const [isTextEditingModalOpen, setIsTextEditingModalOpen] = useState(false);
 
   // AI Copilot state
   const [aiSidebarOpen, setAiSidebarOpen] = useState(false);
@@ -723,21 +725,85 @@ export const QuillEditor = ({
   }, [socket, quill, cursors]);
 
   // Load document content
+  // In the useEffect for loading document content, modify the socket.once handler:
+  // useEffect(() => {
+  //   if (!socket || !quill) return;
+
+  //   socket.once("load-document", (document) => {
+  //     // Temporarily disable change tracking while loading
+  //     setIsLocalChange(true);
+
+  //     // Check if this is a new document with a template
+  //     const templateContent = localStorage.getItem(`document-template-${documentId}`);
+
+  //     if (templateContent) {
+  //       // If template exists, set the content from the template
+  //       quill.setContents([]);
+  //       quill.insertText(0, templateContent);
+
+  //       // Remove the template from localStorage to prevent reloading
+  //       localStorage.removeItem(`document-template-${documentId}`);
+  //     } else if (document) {
+  //       // If no template but document exists, load the existing document
+  //       quill.setContents(document);
+  //     }
+
+  //     quill.enable();
+
+  //     // Restore change tracking after a short delay
+  //     setTimeout(() => {
+  //       setIsLocalChange(false);
+  //     }, 50);
+  //   });
+
+  //   socket.emit("get-document", {
+  //     documentId,
+  //     documentName: documentTitle,
+  //     token:
+  //       document.cookie
+  //         .split("; ")
+  //         .find((row) => row.startsWith("token="))
+  //         ?.split("=")[1] || "",
+  //   });
+  // }, [socket, quill, documentId, documentTitle, userName]);
+
   useEffect(() => {
     if (!socket || !quill) return;
 
-    socket.once("load-document", (document) => {
+    // Use 'on' instead of 'once' to keep the listener active
+    const handleLoadDocument = (document: any) => {
       // Temporarily disable change tracking while loading
       setIsLocalChange(true);
-      quill.setContents(document);
+
+      // Check if this is a new document with a template
+      const templateContent = localStorage.getItem(
+        `document-template-${documentId}`
+      );
+
+      if (templateContent) {
+        // If template exists, set the content from the template
+        quill.setContents([]);
+        quill.insertText(0, templateContent);
+
+        // Remove the template from localStorage to prevent reloading
+        localStorage.removeItem(`document-template-${documentId}`);
+      } else if (document) {
+        // If no template but document exists, load the existing document
+        quill.setContents(document);
+      }
+
       quill.enable();
 
       // Restore change tracking after a short delay
       setTimeout(() => {
         setIsLocalChange(false);
       }, 50);
-    });
+    };
 
+    // Add the event listener
+    socket.on("load-document", handleLoadDocument);
+
+    // Emit get-document request
     socket.emit("get-document", {
       documentId,
       documentName: documentTitle,
@@ -747,6 +813,11 @@ export const QuillEditor = ({
           .find((row) => row.startsWith("token="))
           ?.split("=")[1] || "",
     });
+
+    // Cleanup function to remove the event listener
+    return () => {
+      socket.off("load-document", handleLoadDocument);
+    };
   }, [socket, quill, documentId, documentTitle, userName]);
 
   // Export document function
@@ -840,7 +911,19 @@ export const QuillEditor = ({
       </div>
 
       {/* Main Editor Container */}
+      <Button
+        onClick={() => setIsTextEditingModalOpen(true)}
+        variant="outline"
+        size="sm"
+      >
+        Text Analysis
+      </Button>
       <div className="flex flex-col h-full">
+        <TextEditingModal
+          isOpen={isTextEditingModalOpen}
+          onClose={() => setIsTextEditingModalOpen(false)}
+          quill={quill}
+        />
         <div className="flex-1 overflow-hidden">
           <div
             className="text-editor-container h-[70vh] custom-scrollbar"
