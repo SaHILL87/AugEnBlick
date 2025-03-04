@@ -21,6 +21,7 @@ import { User } from "./models/user.models";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import { accessRouter } from "./routes/access.routes";
 import { versionRoutes } from "./routes/version.routes";
+import Document from "./models/document.models";
 
 const app = express();
 
@@ -186,6 +187,25 @@ io.on("connection", (socket) => {
     } catch (error) {
       console.error("Authentication error:", error);
       socket.emit("auth-error", "Authentication failed");
+    }
+  });
+  socket.on("add-comment", async ({ documentId, content, userId }) => {
+    try {
+      const document = await Document.findByIdAndUpdate(
+        documentId,
+        {
+          $push: {
+            comments: {
+              user: userId,
+              content,
+            },
+          },
+        },
+        { new: true, populate: "comments.user" }
+      );
+      io.to(documentId).emit("update-comments", document?.comments);
+    } catch (error) {
+      console.error("Error adding comment:", error);
     }
   });
   // Handle text changes

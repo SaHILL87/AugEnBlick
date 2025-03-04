@@ -1,36 +1,40 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import Quill from "quill";
-import "quill/dist/quill.snow.css";
-import { Socket } from "socket.io-client";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
-import { saveAs } from "file-saver";
 import { Button } from "@/components/ui/button";
-import {
-  Download,
-  Save,
-  Check,
-  RefreshCcw,
-  Languages,
-  Bot,
-  FileText,
-  Loader2,
-  Mic,
-} from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { forwardRef, useImperativeHandle } from "react";
+import { getUserIdFromToken } from "@/lib/utils";
+import { saveAs } from "file-saver";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import {
+  Bot,
+  Check,
+  Download,
+  FileText,
+  Languages,
+  Loader2,
+  Mic,
+  RefreshCcw,
+  Save,
+} from "lucide-react";
+import Quill from "quill";
+import "quill/dist/quill.snow.css";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { Socket } from "socket.io-client";
+import {
+  CommentsDrawer,
+  ToggleCommentsButton
+} from "./Comments";
+import TextEditingModal from "./TextSuggestion";
+import { AICopilotSidebar } from "./editor/ai-copilot";
 
 interface QuillEditorHandle {
   getQuill: () => Quill | undefined;
 }
-import TextEditingModal from "./TextSuggestion";
-import { AICopilotSidebar } from "./editor/ai-copilot";
 
 // QuillCursors interface
 interface QuillCursors {
@@ -204,6 +208,10 @@ export const QuillEditor = forwardRef<QuillEditorHandle, QuillEditorProps>(
     const [isProcessingVoice, setIsProcessingVoice] = useState(false);
     // Optional: Add a check for speech recognition support
     const [isSpeechSupported, setIsSpeechSupported] = useState(true);
+    const [comments, setComments] = useState<any[]>([]);
+    const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+    const userId = getUserIdFromToken();
+    console.log(userId);
 
     useEffect(() => {
       if (
@@ -308,6 +316,36 @@ export const QuillEditor = forwardRef<QuillEditorHandle, QuillEditorProps>(
       },
       [quill, simulateTypingEffect, isProcessing]
     );
+
+    const handleAddComment = useCallback(
+      (content: string) => {
+        if (!socket || !documentId || !userId) return;
+        socket.emit("add-comment", { documentId, content, userId });
+      },
+      [socket, documentId, userId]
+    );
+
+    // Add comments update listener
+    useEffect(() => {
+      if (!socket) return;
+
+      const handleCommentsUpdate = (updatedComments: any[]) => {
+        setComments(updatedComments);
+      };
+
+      socket.on("update-comments", handleCommentsUpdate);
+      return () => {
+        socket.off("update-comments", handleCommentsUpdate);
+      };
+    }, [socket]);
+
+    // Update document load handler
+    const handleLoadDocument = (document: any) => {
+      // ... existing code ...
+      if (document.comments) {
+        setComments(document.comments);
+      }
+    };
 
     const startVoiceListening = useCallback(() => {
       if (!quill) return;
@@ -966,6 +1004,13 @@ export const QuillEditor = forwardRef<QuillEditorHandle, QuillEditorProps>(
               className="text-editor-container h-[70vh] custom-scrollbar"
               ref={wrapperRef}
             ></div>
+            <CommentsDrawer
+              comments={comments}
+              onAddComment={handleAddComment}
+              userId={userId} // or your user ID source
+              isOpen={isCommentsOpen}
+              onClose={() => setIsCommentsOpen(false)}
+            />
           </div>
 
           {/* Toolbar with AI and Document Actions - Now at the bottom */}
@@ -995,6 +1040,10 @@ export const QuillEditor = forwardRef<QuillEditorHandle, QuillEditorProps>(
             </div>
 
             <div className="flex space-x-2">
+              <ToggleCommentsButton
+                onClick={() => setIsCommentsOpen(!isCommentsOpen)}
+                commentCount={comments.length}
+              />
               <Button
                 onClick={exportDocument}
                 variant="outline"
