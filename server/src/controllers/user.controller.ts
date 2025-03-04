@@ -208,7 +208,12 @@ export const isCollaborator = TryCatch(async(req,res,next)=>{
     console.log(doc);
 
     if(!doc){
-        return res.status(404).json({message:"Document not found"});
+        return res.status(200).json({
+          isAccessible: true,
+          isCollaborator: false,
+          isOwner: true
+
+      });;
     }
 
     if(doc.owner.toString() === userId){
