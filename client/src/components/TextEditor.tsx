@@ -49,22 +49,26 @@ export const TextEditor = () => {
 
   const { id: documentId } = useParams();
 
-  const [accessStatus, setAccessStatus] = useState<DocumentAccessResponse | null>(null);
+  const [accessStatus, setAccessStatus] =
+    useState<DocumentAccessResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkDocumentAccess = async () => {
       try {
         // Replace with your actual API endpoint
-        const response = await axios.post<DocumentAccessResponse>(`${import.meta.env.VITE_SERVER_URL}/api/user/isContributor`,{
-          documentId,
-          token:getCookie("token")
-        });
+        const response = await axios.post<DocumentAccessResponse>(
+          `${import.meta.env.VITE_SERVER_URL}/api/user/isContributor`,
+          {
+            documentId,
+            token: getCookie("token"),
+          }
+        );
 
         setAccessStatus(response.data);
         setIsLoading(false);
       } catch (error) {
-        console.error('Failed to check document access', error);
+        console.error("Failed to check document access", error);
         setAccessStatus(null);
         setIsLoading(false);
       }
@@ -112,6 +116,27 @@ export const TextEditor = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchDocumentTitle = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_SERVER_URL}/api/user/${documentId}`,
+          {
+            headers: { Authorization: `Bearer ${getCookie("token")}` },
+          }
+        );
+        setDocumentTitle(response.data.title);
+      } catch (error) {
+        console.error("Failed to fetch title", error);
+        setDocumentTitle("Untitled Document");
+      }
+    };
+
+    if (accessStatus?.isAccessible) {
+      fetchDocumentTitle();
+    }
+  }, [documentId, accessStatus?.isAccessible]);
+
   // Save document at regular intervals
   useEffect(() => {
     if (!socket) return;
@@ -122,6 +147,19 @@ export const TextEditor = () => {
 
     return () => {
       clearInterval(interval);
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTitleChanged = (newTitle: string) => {
+      setDocumentTitle(newTitle);
+    };
+
+    socket.on("title-changed", handleTitleChanged);
+    return () => {
+      socket.off("title-changed", handleTitleChanged);
     };
   }, [socket]);
 
@@ -142,10 +180,9 @@ export const TextEditor = () => {
       setIsSaving(false);
     }, 1000);
 
-    socket.on("access-denied",()=>{
+    socket.on("access-denied", () => {
       alert("You are not authorized to edit this document");
-    })
-
+    });
   }, [socket, documentId, documentTitle]);
 
   // Toggle between editor and drawing mode
@@ -165,8 +202,19 @@ export const TextEditor = () => {
     },
     []
   );
+  const handleTitleBlur = useCallback(async () => {
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_SERVER_URL}/api/user/${documentId}/title`,
+        { title: documentTitle },
+        { headers: { Authorization: `Bearer ${getCookie("token")}` } }
+      );
+    } catch (error) {
+      console.error("Failed to save title", error);
+    }
+  }, [documentId, documentTitle]);
 
-  if(isLoading || !accessStatus?.isAccessible){
+  if (isLoading || !accessStatus?.isAccessible) {
     return (
       <div>
         {isLoading ? (
@@ -177,12 +225,12 @@ export const TextEditor = () => {
           </div>
         )}
       </div>
-    )
+    );
   }
 
   const renderVersionControls = () => (
     <div className="flex gap-2 border-l border-gray-200 pl-3">
-      <VersionModal 
+      <VersionModal
         documentId={documentId!}
         quill={quillRef}
         onSave={saveDocument}
@@ -201,10 +249,8 @@ export const TextEditor = () => {
               <input
                 type="text"
                 value={documentTitle}
-                onChange={handleTitleChange}
-                onBlur={saveDocument}
-                className="text-xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 rounded px-2 py-1 bg-blue-50 text-blue-800"
-                aria-label="Document title"
+                onChange={(e) => setDocumentTitle(e.target.value)}
+                onBlur={handleTitleBlur}
               />
               <div className="flex items-center text-sm text-gray-500">
                 {isSaving ? "Saving..." : "Saved"}
@@ -213,8 +259,8 @@ export const TextEditor = () => {
 
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                <Label 
-                  htmlFor="mode-toggle" 
+                <Label
+                  htmlFor="mode-toggle"
                   className="text-sm font-medium text-purple-800"
                 >
                   {showDrawing ? "Drawing Mode" : "Text Mode"}
@@ -240,9 +286,9 @@ export const TextEditor = () => {
                 </div>
                 {renderVersionControls()}
 
-                <Button 
-                  onClick={toggleActiveUsers} 
-                  variant="outline" 
+                <Button
+                  onClick={toggleActiveUsers}
+                  variant="outline"
                   size="sm"
                   className="bg-pink-50 text-pink-800 hover:bg-pink-100"
                 >
@@ -259,8 +305,13 @@ export const TextEditor = () => {
       <div className="flex-1 container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 gap-4">
           {/* Active Users Panel (Conditional) */}
-          {showActiveUsers && <ActiveUsersDrawer activeUsers={activeUsers} setShowActiveUsers={setShowActiveUsers} showActiveUsers={showActiveUsers} />
-          }
+          {showActiveUsers && (
+            <ActiveUsersDrawer
+              activeUsers={activeUsers}
+              setShowActiveUsers={setShowActiveUsers}
+              showActiveUsers={showActiveUsers}
+            />
+          )}
 
           {/* Editor/Drawing Container */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -296,7 +347,6 @@ export const TextEditor = () => {
                   saveDocument={saveDocument}
                   activeUsers={activeUsers}
                   exportFormat={exportFormat}
-                  
                 />
               </TabsContent>
 

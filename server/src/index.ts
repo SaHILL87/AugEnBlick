@@ -55,7 +55,7 @@ mongoose
     console.log("DB connection failed. " + error);
   });
 
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
     methods: ["GET", "POST"],

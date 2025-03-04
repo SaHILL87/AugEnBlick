@@ -14,6 +14,7 @@ import { uploadOnCloudinary } from "../lib/cloudinary";
 import Document from "../models/document.models";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import { Schema, SchemaTypes, Types } from "mongoose";
+import { io } from "../index"; // Import the actual io instance
 
 export const registerUser = TryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -248,3 +249,63 @@ export const isCollaborator = TryCatch(async (req, res, next) => {
     isOwner: false,
   });
 });
+
+// document.controller.ts
+
+export const updateDocumentTitle = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { documentId } = req.params;
+    const { title } = req.body;
+    const document = await Document.findById(documentId);
+    if (!document)
+      return res.status(404).json({ message: "Document not found" });
+
+    // const userId = req.user.id;
+    // if (
+    //   document.owner.toString() !== userId &&
+    //   !document.collaborators.includes(userId)
+    // ) {
+    //   return res.status(403).json({ message: "Unauthorized" });
+    // }
+    document.documentName = title;
+    await document.save();
+
+    // Use the actual io instance
+    io.to(documentId).emit("title-changed", title);
+    res.json({ message: "Title updated" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getDocumentMetadata = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const document = await Document.findById(req.params.documentId).select(
+      "name ownerId collaborators"
+    );
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    // const userId = req.user._id;
+    // if (
+    //   document.owner.toString() !== userId &&
+    //   !document.collaborators.includes(userId)
+    // ) {
+    //   return res.status(403).json({ message: "Unauthorized" });
+    // }
+
+    res.json({ title: document.documentName });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
