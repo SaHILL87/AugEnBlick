@@ -431,3 +431,17 @@
 *:focus {
   outline: none;
 }
+
+
+.ql-container.ql-snow {
+  border: none !important;
+}
+
+.ql-editor:focus {
+  outline: none !important;
+}
+
+/* Disable selection */
+.ql-editor * {
+  user-select: none !important;
+}

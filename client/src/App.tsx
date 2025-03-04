@@ -6,6 +6,7 @@ import { TextEditor } from "./components/TextEditor";
 import { Homepage } from "./pages/home";
 import GrainySpotlightScene from "./pages/landing";
 import AccessRequestsPage from "./pages/access-request";
+import DocumentVersionViewer from "./components/editor/document-version-viewer";
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const cookie = Cookies.get("token");
@@ -57,6 +58,7 @@ export default function App() {
           />
 
         <Route path="/access-request/:id" element={<AccessRequestsPage />} />
+        <Route path="/documents/:documentId/version/:versionId" element={<DocumentVersionViewer />} />
       </Routes>
     </>
   );

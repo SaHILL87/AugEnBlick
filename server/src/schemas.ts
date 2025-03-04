@@ -29,6 +29,7 @@ export interface IDocVersion extends Document {
     documentId: Schema.Types.ObjectId;
     data: object;
     drawings: any;
+    name: string 
     createdAt: Date;
     updatedAt: Date;
 }

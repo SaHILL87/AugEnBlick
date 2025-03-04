@@ -22,8 +22,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { forwardRef, useImperativeHandle } from "react";
+
+interface QuillEditorHandle {
+  getQuill: () => Quill | undefined;
+}
 import TextEditingModal from "./TextSuggestion";
 import { AICopilotSidebar } from "./editor/ai-copilot";
 
@@ -133,18 +136,29 @@ interface QuillEditorProps {
   onTextSelection?: (range: any, oldRange: any, source: string) => void;
 }
 
-export const QuillEditor = ({
-  socket,
-  documentId,
-  userName,
-  documentTitle,
-  isSaving,
-  saveDocument,
+export const QuillEditor = forwardRef<QuillEditorHandle, QuillEditorProps> (({
   activeUsers,
+  documentId,
+  documentTitle,
   exportFormat,
+  isSaving,
   onTextSelection,
-}: QuillEditorProps) => {
+  saveDocument,
+  socket,
+  userName,
+}, ref) => {
   const [quill, setQuill] = useState<Quill>();
+
+    // Expose methods via ref
+    useImperativeHandle(ref, () => ({
+      getQuill: () => quill,
+      getContent: () => quill?.getText() || "",
+      getContents: () => quill?.getContents() || [],
+      saveCurrentVersion: () => {
+        // Implement version saving logic
+        console.log("Saving current version...");
+      }
+    }), [quill]); // Dependencies array
   const [cursors, setCursors] = useState<QuillCursors | null>(null);
   const [isLocalChange, setIsLocalChange] = useState(false);
   const [isTextEditingModalOpen, setIsTextEditingModalOpen] = useState(false);
@@ -730,49 +744,6 @@ export const QuillEditor = ({
     };
   }, [socket, quill, cursors]);
 
-  // Load document content
-  // In the useEffect for loading document content, modify the socket.once handler:
-  // useEffect(() => {
-  //   if (!socket || !quill) return;
-
-  //   socket.once("load-document", (document) => {
-  //     // Temporarily disable change tracking while loading
-  //     setIsLocalChange(true);
-
-  //     // Check if this is a new document with a template
-  //     const templateContent = localStorage.getItem(`document-template-${documentId}`);
-
-  //     if (templateContent) {
-  //       // If template exists, set the content from the template
-  //       quill.setContents([]);
-  //       quill.insertText(0, templateContent);
-
-  //       // Remove the template from localStorage to prevent reloading
-  //       localStorage.removeItem(`document-template-${documentId}`);
-  //     } else if (document) {
-  //       // If no template but document exists, load the existing document
-  //       quill.setContents(document);
-  //     }
-
-  //     quill.enable();
-
-  //     // Restore change tracking after a short delay
-  //     setTimeout(() => {
-  //       setIsLocalChange(false);
-  //     }, 50);
-  //   });
-
-  //   socket.emit("get-document", {
-  //     documentId,
-  //     documentName: documentTitle,
-  //     token:
-  //       document.cookie
-  //         .split("; ")
-  //         .find((row) => row.startsWith("token="))
-  //         ?.split("=")[1] || "",
-  //   });
-  // }, [socket, quill, documentId, documentTitle, userName]);
-
   useEffect(() => {
     if (!socket || !quill) return;
 
@@ -872,7 +843,7 @@ export const QuillEditor = ({
       {/* Sidebar AI Copilot */}
       <AICopilotSidebar
         aiSidebarOpen={aiSidebarOpen}
-        setAiSidebarOpen={setAiSidebarOpen}
+         setAiSidebarOpen={setAiSidebarOpen}
         key={"nice"}
         onAiGenerate={handleAiCopilot}
       />
@@ -1004,6 +975,6 @@ export const QuillEditor = ({
       `}</style>
     </div>
   );
-};
+})
 
 export default QuillEditor;
