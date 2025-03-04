@@ -254,3 +254,5 @@ export const TextEditor = () => {
     </div>
   );
 };
+
+export default TextEditor;
