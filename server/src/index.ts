@@ -20,6 +20,7 @@ import { errorMiddleware } from "./lib/ErrorHandler";
 import { User } from "./models/user.models";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import { accessRouter } from "./routes/access.routes";
+import { versionRoutes } from "./routes/version.routes";
 
 
 const app = express();
@@ -39,6 +40,7 @@ const server = http.createServer(app);
 
 app.use("/api/user", userRoutes);
 app.use("/api/access", accessRouter);
+app.use("/api/versions", versionRoutes);
 
 app.use(errorMiddleware)
 

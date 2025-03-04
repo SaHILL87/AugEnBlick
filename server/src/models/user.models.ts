@@ -6,6 +6,7 @@ const userSchema = new Schema<IUser>({
   password: { type: String },
   googleId: { type: String },
   docs: [{ type: Schema.Types.ObjectId, ref: "Document" }],
+  isVerified: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

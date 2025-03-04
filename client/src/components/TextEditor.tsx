@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { useParams } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
@@ -14,6 +14,7 @@ import axios from "axios";
 import { getCookie } from "@/lib/utils";
 import { ActiveUsersDrawer } from "./editor/active-users";
 import { RequestAccess } from "./editor/request-access";
+import { VersionsListModal, VersionModal } from "./editor/Versions";
 
 // Type for user information
 interface User {
@@ -35,6 +36,7 @@ interface DocumentAccessResponse {
 const SAVE_INTERVAL_MS = 10000;
 
 export const TextEditor = () => {
+  const quillRef = useRef<any>(null);
   const [socket, setSocket] = useState<Socket>();
   const [userName, setUserName] = useState<string>("");
   const [documentTitle, setDocumentTitle] =
@@ -178,6 +180,17 @@ export const TextEditor = () => {
     )
   }
 
+  const renderVersionControls = () => (
+    <div className="flex gap-2 border-l border-gray-200 pl-3">
+      <VersionModal 
+        documentId={documentId!}
+        quill={quillRef}
+        onSave={saveDocument}
+      />
+      <VersionsListModal documentId={documentId!} />
+    </div>
+  );
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header with pastel-colored controls */}
@@ -225,6 +238,7 @@ export const TextEditor = () => {
                     <option value="docx">HTML (Word)</option>
                   </select>
                 </div>
+                {renderVersionControls()}
 
                 <Button 
                   onClick={toggleActiveUsers} 
@@ -273,6 +287,7 @@ export const TextEditor = () => {
 
               <TabsContent value="text" className={showDrawing ? "hidden" : ""}>
                 <QuillEditor
+                  ref={quillRef}
                   socket={socket}
                   documentId={documentId}
                   userName={userName}

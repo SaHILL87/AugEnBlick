@@ -4,7 +4,7 @@ import { IDocVersion } from '../schemas';
 
 const versionSchema = new mongoose.Schema<IDocVersion>({
     documentId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: 'Document',
         required: true
     },
@@ -12,6 +12,10 @@ const versionSchema = new mongoose.Schema<IDocVersion>({
     drawings: {
         type: Array,
         default: []
+    },
+    name:{
+        type: String,
+        required: true
     }
 }, {
     timestamps: true
