@@ -27,7 +27,7 @@ collaborative-text-studio/
 
 1. Clone the repository
 ```bash
-git clone [your-repository-link]
+git clone [https://github.com/SaHILL87/AugEnBlick.git]
 cd collaborative-text-studio
 ```
 
