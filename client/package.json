@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@devnomic/marquee": "^1.0.3",
     "@dicebear/collection": "^9.2.2",
     "@dicebear/core": "^9.2.2",
     "@excalidraw/excalidraw": "^0.17.6",
@@ -43,12 +44,14 @@
     "embla-carousel-react": "^8.5.2",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.0.1",
+    "gsap": "^3.12.7",
     "html2canvas": "^1.4.1",
     "install": "^0.13.0",
     "js-cookie": "^3.0.5",
     "jspdf": "^3.0.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.473.0",
+    "motion": "^12.4.10",
     "next-themes": "^0.4.4",
     "npm": "^11.1.0",
     "quill": "^2.0.3",

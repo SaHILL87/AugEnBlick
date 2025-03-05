@@ -14,7 +14,7 @@ interface Document {
     updatedAt: string;
   }
 
-export const Homepage = () => {
+const Homepage = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
 
   useEffect(() => {
@@ -75,3 +75,5 @@ export const Homepage = () => {
     </div>
   );
 };
+
+export default Homepage;

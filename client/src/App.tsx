@@ -3,7 +3,7 @@ import { SignUpForm } from "./pages/sign-up-form";
 import Cookies from "js-cookie";
 import { LoginForm } from "./pages/login-form";
 import { TextEditor } from "./components/TextEditor";
-import { Homepage } from "./pages/home";
+import  Homepage  from "./pages/home";
 import GrainySpotlightScene from "./pages/landing";
 import AccessRequestsPage from "./pages/access-request";
 import DocumentVersionViewer from "./components/editor/document-version-viewer";
