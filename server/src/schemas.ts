@@ -22,6 +22,11 @@ export interface IDocs extends Document {
     createdBy: Schema.Types.ObjectId;
     collaborators: Array<Schema.Types.ObjectId>;
     owner: Schema.Types.ObjectId;
+    comments: {
+        user: mongoose.Types.ObjectId;
+        content: string;
+        createdAt: Date;
+      }[];
 }
 
 export interface IDocVersion extends Document {
